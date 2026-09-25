@@ -20,10 +20,19 @@ test('missing timestamp remains unknown and null value is preserved', () => {
   assert.equal(a.read('navigation.speedOverGround').value, null)
 })
 test('async official plugin inventory is projected; config never escapes', async () => {
-  const a = new SignalKAdapter({ getFeatures: async () => ({ plugins: [{ id: 'test', enabled: false, version: '1.0', password: 'hidden' }] }) }, settings)
-  assert.deepEqual(await a.plugins(), { plugins: [{ id: 'test', enabled: false, version: '1.0' }], truncated: false })
+  const a = new SignalKAdapter({ getFeatures: async () => ({ plugins: [{ id: 'test', name: 'Test Plugin', enabled: false, version: '1.0', password: 'hidden' }] }) }, settings)
+  assert.deepEqual(await a.plugins(), { plugins: [{ id: 'test', name: 'Test Plugin', enabled: false, version: '1.0' }], truncated: false })
   const b = new SignalKAdapter({ getFeatures: () => ({ plugins: {} }) }, settings)
   await assert.rejects(b.plugins(), /UNSUPPORTED/)
+})
+test('plugin names are nullable and bounded', async () => {
+  const a = new SignalKAdapter({ getFeatures: async () => ({ plugins: [
+    { id: 'missing' }, { id: 'invalid', name: 42 }, { id: 'long', name: 'x'.repeat(300) }
+  ] }) }, settings)
+  const { plugins } = await a.plugins()
+  assert.equal(plugins[0].name, null)
+  assert.equal(plugins[1].name, null)
+  assert.equal(plugins[2].name, 'x'.repeat(256))
 })
 test('bounded redaction and hostile path handling', () => {
   assert.equal(safeCopy({ apiKey: 'hidden' }).apiKey, '[REDACTED]')

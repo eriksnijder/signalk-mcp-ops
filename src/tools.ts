@@ -35,10 +35,5 @@ export function createServer(app: ReadAPI, settings: Settings) {
   register('get_security_status', 'Report MCP policy only; host security cannot be inferred.', {}, () => ({
     pluginKeyRequired: true, hostPolicy: 'exact-allowlist', originPolicy: 'exact-allowlist-or-absent',
     signalKSecurityEnabled: 'unknown', tls: 'deployment-dependent', rawConfigAndLogs: false }))
-  for (const name of ['list_connections', 'get_connection', 'get_connection_status', 'get_plugin_status', 'get_plugin_config', 'get_recent_errors']) {
-    const needsId = ['get_connection', 'get_connection_status', 'get_plugin_status', 'get_plugin_config'].includes(name)
-    register(name, 'Reserved diagnostics contract. v0.1 returns UNSUPPORTED until a version-tested internal adapter exists.',
-      needsId ? { id: z.string().min(1).max(256) } : {}, () => { throw new DiagnosticError('UNSUPPORTED') })
-  }
   return server
 }

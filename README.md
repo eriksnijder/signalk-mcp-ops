@@ -2,7 +2,7 @@
 
 A generic TypeScript Signal K plugin for read-only operations and diagnostics through the Model Context Protocol (MCP).
 
-**Status: v0.1 development baseline.** Protocol integration is tested with the official MCP client and a simulated Signal K API. A live Signal K compatibility test is required before release or deployment. This repository contains no vessel-specific addresses, identities or credentials.
+**Status: v0.1 baseline with successful live end-to-end validation on OpenPlotter / Signal K.** Automated protocol tests also use the official MCP client and a simulated Signal K API. See the validation scope below. This repository contains no vessel-specific addresses, identities or credentials.
 
 The plugin mounts a stateless Streamable HTTP endpoint at:
 
@@ -17,10 +17,22 @@ It uses Signal K's existing HTTP server and TLS deployment. It opens no addition
 - Read one allowed `vessels.self` value with native units, timestamp, source and freshness.
 - Discover value paths with bounded pagination and inspect source identifiers.
 - Diagnose missing or stale data without claiming a hardware root cause.
-- List plugins through the official asynchronous `getFeatures()` API.
+- List plugins (`id`, `name`, `version`, `enabled`) through the official asynchronous `getFeatures()` API.
 - Report MCP capabilities and the plugin's security policy.
 
-Connection inspection, plugin configuration/status and recent server errors are **reserved contracts**, returning `UNSUPPORTED`. No version-specific internal adapter ships in v0.1. See the full [API matrix](SPEC.md).
+The MCP registry exposes seven implemented tools. Connection inspection, plugin configuration/status and recent server errors are **planned/reserved functionality**, not registered or advertised by `tools/list`. No version-specific internal adapter ships in v0.1. See the full [API matrix](SPEC.md).
+
+## Live end-to-end validation
+
+The current v0.1 baseline was successfully validated on a real OpenPlotter / Signal K installation, as reported by the operator:
+
+- Signal K loaded and enabled the plugin successfully.
+- The MCP endpoint was available at `/plugins/signalk-mcp-ops/mcp` and reused the existing Signal K TLS setup.
+- Signal K admin authentication and the additional `X-MCP-Ops-Key` both worked.
+- An external Windows client connected remotely using Streamable HTTP MCP.
+- Remote `tools/list`, `get_server_info` and `read_path("navigation.datetime")` calls succeeded.
+
+This records the operator's completed baseline validation, not a new live run performed as part of this cleanup. Exact OpenPlotter, Signal K and client versions were not recorded here, so this does not establish a supported version range or certify all deployment scenarios. No vessel-specific hostnames, IP addresses, usernames, tokens or secrets are included.
 
 ## Development
 

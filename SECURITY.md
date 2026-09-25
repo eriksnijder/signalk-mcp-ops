@@ -1,6 +1,6 @@
 # Security policy and model
 
-v0.1 is a development baseline pending live Signal K validation. Read-only access still exposes sensitive operational data, potentially including position. Limit the configured path prefixes and authorize only trusted operators and MCP clients.
+v0.1 has successful operator-reported live end-to-end validation on OpenPlotter / Signal K, including existing TLS, admin authentication and the additional key (see README.md). This is not a comprehensive security audit; the security model is unchanged. Read-only access still exposes sensitive operational data, potentially including position. Limit the configured path prefixes and authorize only trusted operators and MCP clients.
 
 ## Trust boundaries
 
