@@ -21,6 +21,8 @@ Before a release:
 
 ## Live compatibility checklist
 
+The successful operator-reported baseline validation is recorded in README.md. The checklist below remains useful for release acceptance beyond those confirmed scenarios.
+
 - Install the built tarball in a disposable Signal K instance; verify plugin discovery and Admin UI schema.
 - Enable with valid settings/environment; verify missing key and invalid settings fail closed.
 - Confirm unauthenticated/non-admin Signal K requests are rejected when host security is on, even with the plugin key.
@@ -28,7 +30,7 @@ Before a release:
 - Connect a real MCP client with both credentials; initialize, list tools, read a known sample path, inspect sources and list plugins.
 - Verify allowed/disallowed Host and Origin, proxy/TLS behavior, JSON parser limits and invalid/oversized requests.
 - Exercise stop/re-enable/reconfigure and concurrent requests; confirm no duplicate handlers, open transports or stale credentials.
-- Confirm reserved tools return UNSUPPORTED and never expose raw configuration or logs.
+- Confirm only seven implemented tools appear in `tools/list`; planned/reserved tools are not callable and no raw configuration or logs are exposed.
 
 ## Package
 

@@ -48,6 +48,7 @@ export class SignalKAdapter {
       !features.plugins.every(p => isRecord(p) && typeof p.id === 'string')) throw new DiagnosticError('UNSUPPORTED')
     const entries = features.plugins
     return { plugins: entries.slice(0, 100).map(info => ({ id: info.id.slice(0, 256),
+      name: isRecord(info) && typeof info.name === 'string' ? info.name.slice(0, 256) : null,
       version: isRecord(info) && typeof info.version === 'string' ? info.version.slice(0, 64) : null,
       enabled: isRecord(info) && typeof info.enabled === 'boolean' ? info.enabled : null })), truncated: entries.length > 100 }
   }
