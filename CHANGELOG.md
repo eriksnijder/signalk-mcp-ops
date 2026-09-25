@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — provider diagnostics
+
+- Added list_connections and get_connection_status through an isolated, runtime-checked adapter based on Signal K v2.31.0 source.
+- Added evidence-only provider context and unproven source correlation candidates to path diagnosis; preserved public path behavior when internals are unavailable.
+- Projected configuration fields by allowlist and withheld arbitrary status prose; added malformed-data, secret-leak and bounds regression tests.
+- Nine registered tools; existing authentication and dependency versions unchanged. New diagnostics require post-review live tests on the reference OpenPlotter installation.
+
 ## 0.1.0 — Unreleased
 
 - TypeScript Signal K plugin with stateless Streamable HTTP MCP endpoint.

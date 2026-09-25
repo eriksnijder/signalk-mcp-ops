@@ -7,9 +7,15 @@ v0.1 has successful operator-reported live end-to-end validation on OpenPlotter 
 1. Signal K owns TLS, its authentication and the plugin router. This plugin keeps routes at their default admin level.
 2. Every request also requires `X-MCP-Ops-Key`, checked against `SIGNALK_MCP_OPS_KEY` in the Signal K process environment. Missing/invalid configuration disables the endpoint. This defense remains effective when host security is disabled, but operators should still enable Signal K authentication.
 3. Host headers must exactly match configured values. Present Origin headers must exactly match the origin allowlist; absent Origin is permitted for native clients. Origin/Host are not authentication. Forwarded headers do not determine trust.
-4. Tools accept only validated inputs, read permitted self-context paths, project output fields and bound results. No config/log read is enabled. Tools cannot write data, invoke control functions, install packages or restart the server.
+4. Tools accept only validated inputs, read permitted self-context paths, project output fields and bound results. The isolated provider adapter reads only the internal inventory/status sources and exports allowlisted fields; full config/log export is not enabled. Tools cannot write data, invoke control functions, install packages or restart the server.
 
 The key grants access to all configured paths; it is not per-user authorization and is not an OAuth bearer token. Key rotation requires updating the process environment/restarting Signal K and reconfiguring clients. Do not place keys in query strings, plugin settings, source control, screenshots or issue reports. Do not reuse the Signal K admin token as the plugin key.
+
+## Internal provider data
+
+Configured connection output is a strict allowlist (id, enabled, type); options, subOptions, hosts, paths, usernames, passwords and tokens are not exported. Tests include synthetic secrets in options and status messages. Free-form message/lastError text is withheld except for an exact allowlist of generic complete messages; arbitrary prose is not considered safe merely because its field name is allowed. IDs/types remain operational metadata; operators must not embed secrets in identifiers. Accessor properties are rejected without invoking getters. Unexpected API shapes fail closed.
+
+Source namespace matches are only candidates, never proof of provider ownership. A reported status is not a healthy/running assertion, and absent status is unknown. Public telemetry redaction behavior and the existing authentication model are unchanged. No new listeners, filesystem/log reads or write operations are added.
 
 ## Deployment responsibilities
 
