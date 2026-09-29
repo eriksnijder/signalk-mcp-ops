@@ -34,9 +34,23 @@ The current v0.1 baseline was successfully validated on a real OpenPlotter / Sig
 
 This records the operator's completed baseline validation, not a new live run performed as part of this cleanup. Signal K Server 2.31.0 is the confirmed baseline runtime; exact OpenPlotter and client versions are not recorded here, so this does not establish a supported version range or certify all deployment scenarios. No vessel-specific hostnames, IP addresses, usernames, tokens or secrets are included.
 
+## Completed provider diagnostics live validation
+
+The operator confirmed successful end-to-end testing on **Signal K Server 2.31.0**, **Node.js 22.23.2**, **OpenPlotter / Raspberry Pi**, using a remote Windows MCP client over the existing authenticated HTTPS endpoint.
+
+- `tools/list` returned 9 tools.
+- `get_server_info` returned `publicApiAvailable: true`, `internalAdapter.referenceVersion: "2.31.0"` and `internalAdapter.compatible: true`.
+- `list_connections` returned the live configured Signal K Data Connection using only `id`, `enabled` and `type`.
+- `get_connection_status` returned live provider status; free-form provider status text was withheld as designed.
+- No connection configuration, credentials or secrets appeared in MCP output.
+- `diagnose_missing_path` on an existing fresh path returned the live reading, source information and explicitly unproven correlation information.
+- On a missing wind path, `diagnose_missing_path` returned `state: missing`, provider context and zero enabled provider errors, without claiming provider ownership or a hardware root cause.
+
+These are operator-reported verified results, recorded by a documentation-only update. They establish the tested reference combination, not a broad supported-version range or results for other scenarios. No vessel-specific identifiers, readings or secrets are reproduced.
+
 ## Internal provider diagnostics reference
 
-The reference runtime is OpenPlotter with Signal K Server **2.31.0**, where the existing public baseline was live-tested. The new provider diagnostics still require live validation after code review. Public API types remain 2.33.0 and MCP SDK remains 1.30.1; neither is upgraded here. Runtime shape detection, not an assumed package version, gates internal access. No broad server-version range is claimed.
+Provider diagnostics were successfully live-tested on OpenPlotter / Raspberry Pi with Signal K Server **2.31.0** and Node.js **22.23.2**, using a remote Windows MCP client over the existing authenticated HTTPS endpoint. See the completed validation record in README.md. Public API types remain 2.33.0 and MCP SDK remains 1.30.1; neither is upgraded here. Runtime shape detection, not an assumed package version, gates internal access. No broad server-version range is claimed.
 
 The original adapter is based on tag [v2.31.0](https://github.com/SignalK/signalk-server/tree/v2.31.0), commit `5a3c945ca3f8a0427302ca37a4ae476ee2276adc`:
 
