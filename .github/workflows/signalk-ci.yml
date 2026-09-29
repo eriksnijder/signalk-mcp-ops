@@ -1,0 +1,39 @@
+# Based on SignalK/signalk-server/docs/develop/plugins/examples/plugin-caller-example.yml
+name: SignalK Plugin CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      enable-signalk-integration:
+        description: Start Signal K servers and install the plugin for integration testing
+        required: false
+        default: false
+        type: boolean
+      signalk-server-versions:
+        description: 'JSON array of Signal K versions, e.g. ["2.31.0", "latest"]'
+        required: false
+        default: '["2.31.0", "latest"]'
+        type: string
+permissions:
+  contents: read
+jobs:
+  test-plugin-auto:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
+    uses: SignalK/signalk-server/.github/workflows/plugin-ci.yml@master
+    with:
+      test-command: npm test
+      build-command: npm run build --if-present
+      node-versions: '["22", "24"]'
+      enable-armv7: false
+      enable-signalk-integration: false
+  test-plugin-manual:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    uses: SignalK/signalk-server/.github/workflows/plugin-ci.yml@master
+    with:
+      test-command: npm test
+      build-command: npm run build --if-present
+      node-versions: '["22", "24"]'
+      enable-armv7: false
+      enable-signalk-integration: ${{ inputs.enable-signalk-integration }}
+      signalk-server-versions: ${{ inputs.signalk-server-versions }}

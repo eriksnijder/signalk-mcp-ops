@@ -1,26 +1,123 @@
 # Signal K MCP Operations
 
-A generic TypeScript Signal K plugin for read-only operations and diagnostics through the Model Context Protocol (MCP).
+**MCP Operations & Diagnostics** adds a read-only Model Context Protocol endpoint to Signal K so compatible AI clients can inspect telemetry, discover paths and diagnose missing data or provider status.
 
-**Status: v0.1 baseline with successful live end-to-end validation on OpenPlotter / Signal K.** Automated protocol tests also use the official MCP client and a simulated Signal K API. See the validation scope below. This repository contains no vessel-specific addresses, identities or credentials.
+- Reuses Signal K's existing HTTP/TLS server at `/plugins/signalk-mcp-ops/mcp`; opens no extra listening port.
+- Requires Signal K admin authentication and a separate `X-MCP-Ops-Key` in the documented secure deployment.
+- Includes **nine read-only tools** for telemetry, path/source discovery, server/security information and provider diagnostics.
+- Provider diagnostics are live runtime-validated on **Signal K Server 2.31.0**. Version-sensitive internals are feature-detected at runtime and fail safely with `UNSUPPORTED` when incompatible.
+- No write operations, configuration changes, restarts, logs, arbitrary code execution or vessel control.
 
-The plugin mounts a stateless Streamable HTTP endpoint at:
+**Release status:** preparing the first public v0.1.0 npm / Signal K App Store release. This is not a publication announcement.
 
-```text
-https://<server>/plugins/signalk-mcp-ops/mcp
+## Tools
+
+`get_server_info`, `list_plugins`, `read_path`, `list_paths`, `inspect_path_sources`, `diagnose_missing_path`, `get_security_status`, `list_connections`, `get_connection_status`.
+
+Telemetry retains native units and timestamps. Provider inventory exports only id/enabled/type, and arbitrary status text is withheld. Full connection/plugin configuration and server logs are not exposed. See the [API matrix](SPEC.md).
+
+## Installation
+
+### Current/manual development install
+
+This package is being prepared for its first public release; these instructions do not imply that it is already published. From a clean repository checkout with Node.js >=22:
+
+```sh
+npm ci
+npm test
+npm pack
 ```
 
-It uses Signal K's existing HTTP server and TLS deployment. It opens no additional listener. There are no write tools, shell execution, generated code execution, configuration updates, restarts or control commands.
+Install the generated `signalk-mcp-ops-0.1.0.tgz` in the Signal K configuration directory, using the account that runs Signal K:
 
-## Available in v0.1
+```sh
+cd <Signal K configuration directory>
+npm install --ignore-scripts /path/to/signalk-mcp-ops-0.1.0.tgz
+```
 
-- Read one allowed `vessels.self` value with native units, timestamp, source and freshness.
-- Discover value paths with bounded pagination and inspect source identifiers.
-- Diagnose missing or stale data without claiming a hardware root cause.
-- List plugins (`id`, `name`, `version`, `enabled`) through the official asynchronous `getFeatures()` API.
-- Report MCP capabilities and the plugin's security policy.
+The tarball includes compiled `dist/` code. Installation does not require TypeScript or install-time scripts. Restart Signal K to discover the plugin, deploy the MCP key as described below, then configure and enable the plugin in the Admin UI.
 
-The MCP registry exposes nine tools, including `list_connections` and `get_connection_status` through an isolated Signal K 2.31.0 internal adapter. Connection configuration, plugin configuration/status and recent server errors remain planned and unregistered. See the full [API matrix](SPEC.md).
+### Future App Store install
+
+After npm publication and App Store indexing, install **MCP Operations & Diagnostics** (`signalk-mcp-ops`) through the Signal K App Store. It is disabled by default. Deploy the key, configure the allowed host/path settings, and enable it. Until publication, use the tarball procedure above.
+
+## Deploy the MCP key
+
+`SIGNALK_MCP_OPS_KEY` must be available in the **Signal K process environment**. It is separate from the Signal K authentication token. Generate a fresh random key locally:
+
+```sh
+openssl rand -hex 32
+```
+
+The output is the secret: transfer it privately to the environment file, not to logs, screenshots, issues or source control. Do not save it in plugin settings.
+
+For a systemd-managed OpenPlotter installation, first identify the actual Signal K service unit. The following examples assume it is `signalk.service`; adapt only the service name if yours differs.
+
+Create `/etc/signalk-mcp-ops.env` as a root-owned file readable/writable only by root (mode `0600`), and edit it using an administrator editor. Its contents should be:
+
+```text
+SIGNALK_MCP_OPS_KEY=<random secret>
+```
+
+For example, create a new file using `sudo install -m 600 -o root -g root /dev/null /etc/signalk-mcp-ops.env`, then `sudoedit /etc/signalk-mcp-ops.env`. Do not run the creation command over an existing key file, because it empties the file.
+
+Use `sudo systemctl edit signalk.service` to add this drop-in:
+
+```ini
+[Service]
+EnvironmentFile=/etc/signalk-mcp-ops.env
+```
+
+The system service manager reads this root-protected file and passes the key to Signal K. Then apply the drop-in and restart the service:
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl restart signalk.service
+```
+
+Key rotation requires updating the protected file, restarting Signal K and updating the client key. Reloading plugin settings alone does not refresh the process environment. For other service managers, supply the same environment variable through their protected deployment configuration. Never commit or include the key in diagnostic output.
+
+## Plugin configuration
+
+Example options, with a generic local host:
+
+```json
+{
+  "allowedHosts": ["localhost:3000"],
+  "allowedOrigins": [],
+  "pathPrefixes": ["navigation", "environment", "electrical", "propulsion", "tanks"],
+  "staleAfterSeconds": 300
+}
+```
+
+Use your deployment's incoming Host header, including its port, in `allowedHosts`. Present Origin headers must match `allowedOrigins` exactly; an empty list permits clients that omit Origin and rejects requests that carry one. Cross-origin CORS support is not provided. A reverse proxy must preserve an allowed Host; forwarded host headers do not determine trust.
+
+## MCP client authentication
+
+Configure a Streamable HTTP MCP client with:
+
+```text
+Endpoint: https://<Signal K server>/plugins/signalk-mcp-ops/mcp
+Authorization: Bearer <Signal K token>
+X-MCP-Ops-Key: <MCP Ops key>
+```
+
+The route intentionally retains **Signal K admin authentication**. Enable Signal K security and use an authorized admin token; the extra MCP key does not replace it. Clients must support both headers. The plugin key check remains enforced even if host security is disabled, but disabling host security is not the documented deployment configuration.
+
+Use the existing Signal K HTTPS endpoint for remote clients. This version provides no OAuth discovery or OAuth authorization server; clients requiring that flow are unsupported. See [SECURITY.md](SECURITY.md) for the existing trust model and deployment limits.
+
+## Compatibility
+
+| Component | Status | Scope |
+| --- | --- | --- |
+| Signal K Server 2.31.0 | Live validated | Public tools and provider diagnostics on the reference installation |
+| Node.js 22.23.2 | Live validated | OpenPlotter / Raspberry Pi, remote Windows MCP client |
+| Node.js 22 / 24 | CI tested | Automated build/tests; distinct from live server compatibility |
+| Signal K latest | Not yet live validated | No compatibility claim; optional manual integration target |
+
+Internal provider access uses runtime feature detection against the documented 2.31.0 shapes and fails with `UNSUPPORTED` when incompatible. No broad Signal K version range is claimed. The compile-time `@signalk/server-api` version remains 2.33.0; MCP SDK remains 1.30.1.
+
+The official Signal K reusable CI runs alongside project CI. Automatic push/PR runs use Node 22/24 with armv7 and server integration disabled. Once this workflow is on the default branch, use Actions → SignalK Plugin CI → Run workflow, enable integration and supply a JSON version list such as `["2.31.0", "latest"]` for optional server integration checks. A CI server-start check is not a replacement for authenticated live MCP tests.
 
 ## Live end-to-end validation
 
@@ -62,38 +159,15 @@ Only src/internal/signalK231Adapter.ts accesses app.config.settings.pipedProvide
 
 ## Development
 
-Node.js 22 or later is required. The Signal K API types are pinned to `@signalk/server-api` 2.33.0; this is a types baseline, not a claim of testing a specific Signal K server release.
+Node.js >=22 is required. From a clean checkout:
 
 ```sh
-npm ci --ignore-scripts
+npm ci
 npm test
 npm pack --dry-run
 ```
 
-`npm test` compiles TypeScript and runs unit tests plus an actual HTTP MCP client/server exchange. CI repeats these checks on Node 22/24 and Linux/Windows. `dist/index.js` exports the CommonJS factory expected by Signal K.
-
-## Install on a development Signal K server
-
-Build a tarball with `npm pack`, then install that tarball in the server's configuration directory using `npm install /path/to/signalk-mcp-ops-0.1.0.tgz`. Restart Signal K to discover the plugin. Configure and enable it in the Admin UI.
-
-Supply `SIGNALK_MCP_OPS_KEY` to the **Signal K process environment**. Generate a unique random secret of at least 32 characters, for example with a password manager. It is never stored in plugin options. Do not paste it into an issue or commit it. Restart the Signal K process after changing its environment.
-
-Example plugin options (adapt the host and port to your deployment):
-
-```json
-{
-  "allowedHosts": ["localhost:3000"],
-  "allowedOrigins": [],
-  "pathPrefixes": ["navigation", "environment", "electrical", "propulsion", "tanks"],
-  "staleAfterSeconds": 300
-}
-```
-
-`allowedHosts` matches the incoming Host header exactly, including any port. `allowedOrigins` defaults to rejecting requests carrying any Origin header; non-browser clients normally omit it. If browser access is needed, list exact trusted origins. This plugin does not provide cross-origin CORS support. A reverse proxy must preserve a configured Host; forwarded host headers are not trusted.
-
-Configure a Streamable HTTP MCP client with the endpoint URL and custom header `X-MCP-Ops-Key`. Where Signal K security is enabled, the ordinary Signal K admin credential is **also** required (normally in `Authorization: Bearer <Signal K token>`). Plugin routes retain Signal K's admin protection. The extra key does not replace it. Client-specific configuration syntax varies; the client must support both headers.
-
-Use HTTPS for remote access. This version does not implement MCP OAuth discovery or an OAuth authorization server; clients that require that flow are not supported. Keep deployment private until the [release checklist](docs/PUBLISHING.md) and security review are complete.
+Tests compile TypeScript and cover protocol, security, lifecycle and diagnostics using the official MCP client. The published entry point is the compiled CommonJS factory `dist/index.js`. The `prepack` hook builds it before packing; no install-time build is needed.
 
 ## Documentation
 
@@ -109,4 +183,4 @@ Use HTTPS for remote access. This version does not implement MCP OAuth discovery
 
 Primary interface references: [Signal K plugin documentation](https://demo.signalk.org/documentation/Developing/Plugins.html), [Signal K server API](https://github.com/SignalK/signalk-server/tree/master/packages/server-api), and the [official MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk). See `package-lock.json` for the exact dependency resolution.
 
-MIT licensed. Package-name availability and GitHub repository metadata must be checked before publication.
+MIT licensed. Publication remains a separate maintainer action; see the release checklist.
