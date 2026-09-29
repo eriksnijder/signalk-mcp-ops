@@ -20,7 +20,7 @@ It uses Signal K's existing HTTP server and TLS deployment. It opens no addition
 - List plugins (`id`, `name`, `version`, `enabled`) through the official asynchronous `getFeatures()` API.
 - Report MCP capabilities and the plugin's security policy.
 
-The MCP registry exposes seven implemented tools. Connection inspection, plugin configuration/status and recent server errors are **planned/reserved functionality**, not registered or advertised by `tools/list`. No version-specific internal adapter ships in v0.1. See the full [API matrix](SPEC.md).
+The MCP registry exposes nine tools, including `list_connections` and `get_connection_status` through an isolated Signal K 2.31.0 internal adapter. Connection configuration, plugin configuration/status and recent server errors remain planned and unregistered. See the full [API matrix](SPEC.md).
 
 ## Live end-to-end validation
 
@@ -32,7 +32,33 @@ The current v0.1 baseline was successfully validated on a real OpenPlotter / Sig
 - An external Windows client connected remotely using Streamable HTTP MCP.
 - Remote `tools/list`, `get_server_info` and `read_path("navigation.datetime")` calls succeeded.
 
-This records the operator's completed baseline validation, not a new live run performed as part of this cleanup. Exact OpenPlotter, Signal K and client versions were not recorded here, so this does not establish a supported version range or certify all deployment scenarios. No vessel-specific hostnames, IP addresses, usernames, tokens or secrets are included.
+This records the operator's completed baseline validation, not a new live run performed as part of this cleanup. Signal K Server 2.31.0 is the confirmed baseline runtime; exact OpenPlotter and client versions are not recorded here, so this does not establish a supported version range or certify all deployment scenarios. No vessel-specific hostnames, IP addresses, usernames, tokens or secrets are included.
+
+## Completed provider diagnostics live validation
+
+The operator confirmed successful end-to-end testing on **Signal K Server 2.31.0**, **Node.js 22.23.2**, **OpenPlotter / Raspberry Pi**, using a remote Windows MCP client over the existing authenticated HTTPS endpoint.
+
+- `tools/list` returned 9 tools.
+- `get_server_info` returned `publicApiAvailable: true`, `internalAdapter.referenceVersion: "2.31.0"` and `internalAdapter.compatible: true`.
+- `list_connections` returned the live configured Signal K Data Connection using only `id`, `enabled` and `type`.
+- `get_connection_status` returned live provider status; free-form provider status text was withheld as designed.
+- No connection configuration, credentials or secrets appeared in MCP output.
+- `diagnose_missing_path` on an existing fresh path returned the live reading, source information and explicitly unproven correlation information.
+- On a missing wind path, `diagnose_missing_path` returned `state: missing`, provider context and zero enabled provider errors, without claiming provider ownership or a hardware root cause.
+
+These are operator-reported verified results, recorded by a documentation-only update. They establish the tested reference combination, not a broad supported-version range or results for other scenarios. No vessel-specific identifiers, readings or secrets are reproduced.
+
+## Internal provider diagnostics reference
+
+Provider diagnostics were successfully live-tested on OpenPlotter / Raspberry Pi with Signal K Server **2.31.0** and Node.js **22.23.2**, using a remote Windows MCP client over the existing authenticated HTTPS endpoint. See the completed validation record in README.md. Public API types remain 2.33.0 and MCP SDK remains 1.30.1; neither is upgraded here. Runtime shape detection, not an assumed package version, gates internal access. No broad server-version range is claimed.
+
+The original adapter is based on tag [v2.31.0](https://github.com/SignalK/signalk-server/tree/v2.31.0), commit `5a3c945ca3f8a0427302ca37a4ae476ee2276adc`:
+
+- [src/interfaces/providers.ts](https://github.com/SignalK/signalk-server/blob/v2.31.0/src/interfaces/providers.ts): configured connection shape; a single providers/simple element uses options.type, otherwise the first pipe element type is used.
+- [src/pipedproviders.ts](https://github.com/SignalK/signalk-server/blob/v2.31.0/src/pipedproviders.ts): omitted enabled means enabled.
+- [src/index.ts](https://github.com/SignalK/signalk-server/blob/v2.31.0/src/index.ts): getProviderStatus returns an array; type is status/error, statusType distinguishes provider/plugin; historical error fields may be absent. Source labels from upstream may be preserved, so identifier matching is not proof of local connection ownership.
+
+Only src/internal/signalK231Adapter.ts accesses app.config.settings.pipedProviders and app.getProviderStatus(). The public layer continues to use getSelfPath() and getFeatures(). Missing/malformed internals return UNSUPPORTED; limits return RESULT_TOO_LARGE. A valid empty configuration is distinct from an unavailable API. An unavailable diagnostic context never prevents the existing path-state diagnosis.
 
 ## Development
 

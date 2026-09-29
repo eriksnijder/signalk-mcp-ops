@@ -30,7 +30,7 @@ The successful operator-reported baseline validation is recorded in README.md. T
 - Connect a real MCP client with both credentials; initialize, list tools, read a known sample path, inspect sources and list plugins.
 - Verify allowed/disallowed Host and Origin, proxy/TLS behavior, JSON parser limits and invalid/oversized requests.
 - Exercise stop/re-enable/reconfigure and concurrent requests; confirm no duplicate handlers, open transports or stale credentials.
-- Confirm only seven implemented tools appear in `tools/list`; planned/reserved tools are not callable and no raw configuration or logs are exposed.
+- Confirm only nine implemented tools appear in `tools/list`; planned/reserved tools are not callable and no raw configuration or logs are exposed.
 
 ## Package
 
