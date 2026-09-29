@@ -1,6 +1,10 @@
 # Signal K MCP Operations
 
-**MCP Operations & Diagnostics** adds a read-only Model Context Protocol endpoint to Signal K so compatible AI clients can inspect telemetry, discover paths and diagnose missing data or provider status.
+**MCP Operations & Diagnostics** lets you connect an AI assistant to your Signal K server so you can ask questions about what is happening on your boat in normal language.
+
+For example, you could ask why wind data is missing, which Signal K connection is active, where a navigation value comes from, whether a sensor value is stale, or which data paths are currently available. The AI does not control the boat or change Signal K settings: this plugin only gives it safe, read-only access to selected telemetry and diagnostics.
+
+Under the hood, the plugin adds a read-only Model Context Protocol (MCP) endpoint to Signal K. Compatible AI clients can use that endpoint to inspect telemetry, discover paths and sources, and investigate missing data or provider status.
 
 - Reuses Signal K's existing HTTP/TLS server at `/plugins/signalk-mcp-ops/mcp`; opens no extra listening port.
 - Requires Signal K admin authentication and a separate `X-MCP-Ops-Key` in the documented secure deployment.
@@ -8,7 +12,7 @@
 - Provider diagnostics are live runtime-validated on **Signal K Server 2.31.0**. Version-sensitive internals are feature-detected at runtime and fail safely with `UNSUPPORTED` when incompatible.
 - No write operations, configuration changes, restarts, logs, arbitrary code execution or vessel control.
 
-**Release status:** preparing the first public v0.1.0 npm / Signal K App Store release. This is not a publication announcement.
+**Release status:** v0.1.0 is publicly available on npm and released on GitHub.
 
 ## Tools
 
@@ -37,9 +41,11 @@ npm install --ignore-scripts /path/to/signalk-mcp-ops-0.1.0.tgz
 
 The tarball includes compiled `dist/` code. Installation does not require TypeScript or install-time scripts. Restart Signal K to discover the plugin, deploy the MCP key as described below, then configure and enable the plugin in the Admin UI.
 
-### Future App Store install
+### App Store install
 
-After npm publication and App Store indexing, install **MCP Operations & Diagnostics** (`signalk-mcp-ops`) through the Signal K App Store. It is disabled by default. Deploy the key, configure the allowed host/path settings, and enable it. Until publication, use the tarball procedure above.
+`signalk-mcp-ops` is published on npm and is intended for installation through the Signal K App Store once indexed there.
+
+It is disabled by default. After installation, deploy the MCP key, configure the allowed host/path settings, and enable the plugin.
 
 ## Deploy the MCP key
 
@@ -112,8 +118,9 @@ Use the existing Signal K HTTPS endpoint for remote clients. This version provid
 | --- | --- | --- |
 | Signal K Server 2.31.0 | Live validated | Public tools and provider diagnostics on the reference installation |
 | Node.js 22.23.2 | Live validated | OpenPlotter / Raspberry Pi, remote Windows MCP client |
-| Node.js 22 / 24 | CI tested | Automated build/tests; distinct from live server compatibility |
-| Signal K latest | Not yet live validated | No compatibility claim; optional manual integration target |
+| Node.js 22 / 24 | CI tested | Automated build/tests across supported platforms |
+| Signal K Server 2.31.0 | Integration tested | Official Signal K Plugin CI, Node 22 and 24 |
+| Signal K latest | Integration tested | Official Signal K Plugin CI, Node 22 and 24 |
 
 Internal provider access uses runtime feature detection against the documented 2.31.0 shapes and fails with `UNSUPPORTED` when incompatible. No broad Signal K version range is claimed. The compile-time `@signalk/server-api` version remains 2.33.0; MCP SDK remains 1.30.1.
 
