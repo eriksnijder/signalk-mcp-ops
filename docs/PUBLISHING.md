@@ -1,36 +1,44 @@
-# v0.1.0 publication checklist
+# Release procedure
 
-Release preparation only: no npm publication, Git tag or GitHub Release is performed by the readiness branch. The repository is [eriksnijder/signalk-mcp-ops](https://github.com/eriksnijder/signalk-mcp-ops). Follow this checklist when the maintainer explicitly decides to release.
+The public baseline is [v0.1.0, published on 2026-09-29](https://github.com/eriksnijder/signalk-mcp-ops/releases/tag/v0.1.0). Current development prepares **1.0.0-rc.1**. A release candidate is not stable 1.0 and must not replace npm's `latest` tag. Publication, tagging and a GitHub Release require a separate release decision.
 
-## Review and package
+## 1. Verify the reviewed commit
 
-- [ ] Start from a clean checkout of the reviewed `main` commit; confirm `git status --short` is empty and record the commit.
-- [ ] Confirm version `0.1.0`, metadata, MIT license and the undated `0.1.0` changelog/release notes.
-- [ ] Run `npm ci`.
-- [ ] Run `npm test`.
-- [ ] Run `npm pack --dry-run`, then `npm pack` and inspect that exact tarball.
-- [ ] Confirm `dist/index.js`, the internal adapter and required runtime code are present. The entry point must load without a consumer-side build.
-- [ ] Confirm package contents are limited to compiled code, intended documentation, package metadata and license. Source/tests/CI/development artifacts need not ship.
-- [ ] Inspect contents for credentials, `.env` files, local settings, vessel identifiers and sensitive screenshots; none may ship.
-- [ ] Confirm there are no `preinstall`, `install` or `postinstall` hooks. The existing `prepack` build is retained; App Store installations ignore install-time scripts.
-- [ ] Confirm project CI and official **SignalK Plugin CI** are green for the release commit. Automatic runs use Node 22/24; armv7 and Signal K integration are disabled.
-- [ ] If desired, manually run official integration with `["2.31.0", "latest"]`. Keep these results distinct from live/operator validation.
-- [ ] Test the exact tarball on the reference runtime and verify both authentication layers, nine tools, provider projections, text withholding and path diagnoses.
+- Start from a clean checkout of the reviewed commit and record its SHA.
+- Confirm package metadata, MIT license, version and changelog. Runtime MCP/OpenAPI versions come from package.json.
+- Run `npm ci --ignore-scripts`, `npm test`, `npm run audit:runtime`, and `npm run verify:package`.
+- Confirm project CI and SignalK Plugin CI are green for that exact commit.
+- Manually run SignalK Plugin CI integration against explicit versions `["2.31.0", "2.35.1"]` with Node 22 and 24. Record versions and run links; a historical `latest` result is not evidence for today's latest server.
+- Run `npm pack`, retain the exact tarball, record its SHA-256 and inspect its contents. The published package must contain compiled code, approved documentation, metadata and license only. No credentials, environment files, test fixtures or local configuration may ship.
+- Test that exact artifact on the reference Signal K runtime. Verify Signal K admin authentication, missing/wrong MCP key rejection, host/origin rejection, nine tools, allowed/denied paths, provider projections, text withholding, stop/restart and proxy/body-limit behavior. `verify:package` proves clean consumer loading and an MCP exchange with a simulated host; it is not this live acceptance test.
+- Record findings in [the 1.0 acceptance checklist](RELEASE-1.0.md). Do not copy v0.1's historical operator validation as a new result.
 
-## npm readiness
+## 2. Publishing identity and security reporting
 
-- [ ] Check package-name availability with `npm view signalk-mcp-ops name version`. An authenticated registry `E404` means no public package was found at that time; network/authentication errors do not establish availability. If a package exists, confirm ownership and that `0.1.0` is unused.
-- [ ] Confirm the publishing account and permissions with `npm whoami`, or configure npm trusted publishing for the intended GitHub repository/workflow and verify its prerequisites before release. This branch adds no publish workflow or registry token.
-- [ ] Ensure the account's required authentication/2FA or trusted-publisher setup is complete. Never commit registry credentials.
-- [ ] Enable private vulnerability reporting on GitHub and finalize SECURITY.md reporting/support instructions.
+Private vulnerability reporting is enabled for this repository, verified on 2026-10-26. Before release, check the [private reporting page](https://github.com/eriksnijder/signalk-mcp-ops/security/advisories/new) and review SECURITY.md.
 
-## Publish only with a release decision
+The local `npm whoami` check returned HTTP 401 on 2026-10-26. The maintainer must restore authentication interactively on their trusted machine:
 
-- [ ] Publish the reviewed artifact using the authorized npm account (for example `npm publish ./signalk-mcp-ops-0.1.0.tgz --access public`). This is a manual release step, not a CI action in this branch.
-- [ ] Verify the registry version and package contents, then confirm the plugin becomes visible in Signal K App Store after indexing. Do not assume immediate availability.
-- [ ] Tag the reviewed release commit `v0.1.0` and push that tag only after publication is verified.
-- [ ] Create the GitHub Release for `v0.1.0`, using the consolidated changelog as release notes and stating the exact live-tested runtime and remaining compatibility limits.
-- [ ] Install from App Store on the test/reference runtime. Configure the protected environment key and verify authenticated remote MCP access, nine tools and provider diagnostics.
-- [ ] Record the install result and any limitations in the release notes. Add a release date only when the release is actually made.
+```sh
+npm login --auth-type=web --registry=https://registry.npmjs.org/
+npm whoami --registry=https://registry.npmjs.org/
+npm owner ls signalk-mcp-ops --registry=https://registry.npmjs.org/
+```
 
-The operator-validated reference is Signal K 2.31.0 / Node.js 22.23.2 on OpenPlotter / Raspberry Pi, accessed by a remote Windows MCP client over existing authenticated HTTPS. Node 22/24 automated tests do not establish support for arbitrary Signal K versions; Signal K latest has not been live-validated.
+Complete the browser login and required 2FA privately. Do not paste passwords, OTPs or registry tokens into chat, files, CI or Git. Confirm the signed-in account is authorized to publish this existing package. Authentication is not proof of ownership. For an alternative OIDC trusted-publishing setup, configure the exact repository/workflow on npm first; this project does not silently configure a publisher or store a registry token.
+
+Check the intended version with `npm view signalk-mcp-ops versions --json` and verify it is unused. Registry/network/authentication errors are not evidence that a version is available.
+
+## 3. Publish only after a release decision
+
+For an approved release candidate, publish the inspected artifact with a non-default tag:
+
+```sh
+npm publish ./signalk-mcp-ops-1.0.0-rc.1.tgz --access public --tag next
+```
+
+After verification, tag the exact source commit `v1.0.0-rc.1` and create a GitHub **prerelease**. Verify npm's `latest` tag still points to the previous stable release. Do not assume App Store indexing of a prerelease.
+
+For stable 1.0, complete acceptance, update the package to `1.0.0`, rebuild and repeat artifact checks. That is a new artifact, not simply a relabel of the RC. After approval, publish the exact stable tarball with `--tag latest`, verify its registry contents, then tag the matching commit and create the stable GitHub Release. Add the real release date to the changelog. Never overwrite/reuse a published version.
+
+Finally verify Signal K App Store indexing and installation, configure the protected key, and repeat authenticated remote MCP acceptance. Record actual tested versions and remaining limits in the release notes.

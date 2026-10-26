@@ -1,6 +1,6 @@
 # Security policy and model
 
-v0.1 has successful operator-reported live end-to-end validation on OpenPlotter / Signal K, including existing TLS, admin authentication and the additional key (see README.md). This is not a comprehensive security audit; the security model is unchanged. Read-only access still exposes sensitive operational data, potentially including position. Limit the configured path prefixes and authorize only trusted operators and MCP clients.
+The published v0.1.0 has successful operator-reported live end-to-end validation on OpenPlotter / Signal K, including existing TLS, admin authentication and the additional key (see README.md). This is not a comprehensive security audit; the security model is unchanged. Read-only access still exposes sensitive operational data, potentially including position. Limit the configured path prefixes and authorize only trusted operators and MCP clients.
 
 ## Trust boundaries
 
@@ -27,6 +27,12 @@ Plugin exceptions become generic codes. The plugin never logs requests, headers,
 
 ## Reporting
 
-After repository publication, use GitHub **Security → Report a vulnerability** if private reporting is enabled. Do not open public issues containing exploit details, credentials, configuration exports or vessel identifiers. If private reporting is unavailable, request a private reporting channel without disclosing the vulnerability. Maintainer contact and supported-version policy must be finalized before a public release.
+Use [GitHub private vulnerability reporting](https://github.com/eriksnijder/signalk-mcp-ops/security/advisories/new) to contact the repository maintainer, Erik Snijder. Private reporting was enabled and verified on 2026-10-26. Include the affected package/server/Node versions, a minimal synthetic reproduction and the impact. Do not attach live credentials, vessel data or full configurations. If the private form is unavailable, open a public issue requesting a private reporting route without vulnerability details.
+
+Security fixes target the latest stable release. Older releases are not maintained separately; users should upgrade to the fixed version once released. The 1.0 candidate is available for testing and does not replace the stable release until acceptance and publication. Reports are handled on a best-effort basis with no guaranteed response time. This is not a security certification.
+
+The candidate updates MCP SDK, Zod and transitive dependencies after the October 2026 audit findings. CI audits the production dependency tree and rejects moderate-or-higher known findings. A clean audit does not prove all behavior secure or establish whether every upstream advisory is reachable in this plugin.
+
+The separate log-access verification script observes at most one log record and reports only fixed status/count fields. It is development-only, uses a Signal K admin token over TLS, refuses redirects and never prints log content. It does not add log access to MCP; see [SERVER-LOGS.md](docs/SERVER-LOGS.md).
 
 Contributors must add regression tests for authorization bypass, credential exposure, traversal and resource-exhaustion fixes. Do not enable generic config/log serialization based solely on a secret-name denylist.

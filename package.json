@@ -1,25 +1,65 @@
 {
   "name": "signalk-mcp-ops",
-  "version": "0.1.0",
+  "version": "1.0.0-rc.1",
   "description": "Read-only MCP operations and diagnostics plugin for Signal K",
   "license": "MIT",
-  "author": {"name": "Erik Snijder"},
-  "repository": {"type": "git", "url": "https://github.com/eriksnijder/signalk-mcp-ops.git"},
+  "author": {
+    "name": "Erik Snijder"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eriksnijder/signalk-mcp-ops.git"
+  },
   "homepage": "https://github.com/eriksnijder/signalk-mcp-ops",
-  "bugs": {"url": "https://github.com/eriksnijder/signalk-mcp-ops/issues"},
-  "signalk": {"displayName": "MCP Operations & Diagnostics"},
+  "bugs": {
+    "url": "https://github.com/eriksnijder/signalk-mcp-ops/issues"
+  },
+  "signalk": {
+    "displayName": "MCP Operations & Diagnostics"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist", "docs", "README.md", "SPEC.md", "ARCHITECTURE.md", "SECURITY.md", "CONTRIBUTING.md", "CHANGELOG.md", "LICENSE"],
-  "keywords": ["signalk-node-server-plugin", "signalk-category-utility", "signalk", "mcp", "diagnostics"],
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "SPEC.md",
+    "ARCHITECTURE.md",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "signalk-node-server-plugin",
+    "signalk-category-utility",
+    "signalk",
+    "mcp",
+    "diagnostics"
+  ],
   "signalk-plugin-enabled-by-default": false,
-  "engines": {"node": ">=22"},
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test test/*.test.cjs",
     "check": "npm test",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "audit:runtime": "npm audit --omit=dev --audit-level=moderate",
+    "verify:package": "npm run build && node scripts/verify-package.cjs",
+    "verify:logs": "node scripts/verify-server-logs.cjs"
   },
-  "dependencies": {"@modelcontextprotocol/sdk": "1.30.1", "express": "^4.21.2", "zod": "^3.25.76"},
-  "devDependencies": {"@signalk/server-api": "2.33.0", "@types/express": "^4.17.21", "@types/node": "^22.0.0", "typescript": "^5.9.3"}
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "express": "^4.22.3",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@signalk/server-api": "2.33.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3",
+    "ws": "8.22.0"
+  }
 }

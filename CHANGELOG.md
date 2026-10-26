@@ -1,8 +1,18 @@
 # Changelog
 
-## 0.1.0
+## 1.0.0-rc.1 — Unreleased
 
-Prepared for the first release; not yet published. No release date is assigned.
+- Update MCP SDK to 1.32.2, migrate to Zod 4.6.7, require Express >=4.22.3 within major 4, and refresh compatible locked dependencies.
+- Return generic plugin JSON parser errors instead of default error pages; add malformed/oversized/pre-parsed request coverage.
+- Derive MCP and OpenAPI versions from package metadata.
+- Add production dependency auditing and a clean consumer tarball check exercising MCP discovery/authentication and telemetry.
+- Enable private vulnerability reporting and define reporting/support policy, npm login recovery and stable 1.0 acceptance requirements.
+- Verify Signal K server-log access in 2.31.0/2.35.1 source and add a development-only probe that returns no log text. The nine-tool MCP scope is unchanged.
+- Reconcile historical release documentation. Candidate live validation and npm publishing authentication remain required; no new publication is implied.
+
+## 0.1.0 — 2026-09-29
+
+First public npm and GitHub release.
 
 - Streamable HTTP MCP endpoint under the plugin route, reusing Signal K HTTP/TLS and admin authentication without an extra listener.
 - Nine read-only tools, protected by a second, environment-held MCP key plus host/origin and path restrictions.

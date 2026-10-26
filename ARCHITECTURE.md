@@ -22,6 +22,8 @@ flowchart TD
 
 `src/safety.ts` holds validation, prefix checks, constant-length hashed secret comparison and bounded safe copying. Redaction is defense in depth. It is not a substitute for field allowlists or an authorization boundary.
 
+`src/version.ts` reads the installed package version for consistent MCP and OpenAPI metadata. Development-only scripts verify a clean tarball installation and direct Signal K log access; they are not loaded by the plugin. See [server log investigation](docs/SERVER-LOGS.md).
+
 ## Decisions
 
 - Run inside Signal K to reuse its lifecycle, network listener and official data access. No additional service, hostname, certificate or port is assumed.
@@ -32,7 +34,7 @@ flowchart TD
 
 ## Internal provider diagnostics reference
 
-Provider diagnostics were successfully live-tested on OpenPlotter / Raspberry Pi with Signal K Server **2.31.0** and Node.js **22.23.2**, using a remote Windows MCP client over the existing authenticated HTTPS endpoint. See the completed validation record in README.md. Public API types remain 2.33.0 and MCP SDK remains 1.30.1; neither is upgraded here. Runtime shape detection, not an assumed package version, gates internal access. No broad server-version range is claimed.
+Provider diagnostics were successfully live-tested on OpenPlotter / Raspberry Pi with Signal K Server **2.31.0** and Node.js **22.23.2**, using a remote Windows MCP client over the existing authenticated HTTPS endpoint. See the completed validation record in README.md. The candidate retains public API types 2.33.0 and upgrades MCP SDK to 1.32.2. The historical live result does not validate the candidate dependency set. Runtime shape detection, not an assumed package version, gates internal access. No broad server-version range is claimed.
 
 The original adapter is based on tag [v2.31.0](https://github.com/SignalK/signalk-server/tree/v2.31.0), commit `5a3c945ca3f8a0427302ca37a4ae476ee2276adc`:
 
@@ -44,7 +46,7 @@ Only src/internal/signalK231Adapter.ts accesses app.config.settings.pipedProvide
 
 ## Compatibility and release work
 
-Compiled against `@signalk/server-api` 2.33.0 and MCP SDK 1.30.1. The official FeatureInfo API is asynchronous and returns a plugin array. Unexpected shapes yield `UNSUPPORTED`. Tests use fixtures matching those types, plus an actual SDK client over HTTP.
+Compiled against `@signalk/server-api` 2.33.0, MCP SDK 1.32.2 and Zod 4.6.7. The official FeatureInfo API is asynchronous and returns a plugin array. Unexpected shapes yield `UNSUPPORTED`. Tests use fixtures matching those types, plus an actual SDK client over HTTP.
 
 The operator reported successful live baseline validation on a real OpenPlotter / Signal K installation: plugin loading/enabling, the plugin MCP route, existing Signal K TLS, admin authentication and the extra key, plus remote Streamable HTTP from an external Windows client. Remote `tools/list`, `get_server_info` and `read_path("navigation.datetime")` succeeded. See README.md for scope and provenance. Signal K Server 2.31.0 is the confirmed reference runtime for the existing baseline; a broader release range is not established. Provider diagnostics validation also confirmed nine tools, compatible internal adapter detection, projected connection inventory, live status with text withholding, and evidence-only fresh/missing path diagnosis (README.md). Remaining release work includes broader version coverage, negative authentication cases, pre-parsed JSON, disable/re-enable behavior and additional proxy scenarios. Add internal adapters only with tests derived from that exact server source and a documented upgrade strategy.
 

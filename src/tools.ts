@@ -1,3 +1,4 @@
+import { PLUGIN_VERSION } from './version.js'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { SignalK231Adapter } from './internal/signalK231Adapter.js'
@@ -5,7 +6,7 @@ import { SignalKAdapter, type ReadAPI } from './adapter.js'
 import { DiagnosticError, pathSchema, safeCopy, type Settings } from './safety.js'
 
 export function createServer(app: ReadAPI, settings: Settings) {
-  const server = new McpServer({ name: 'signalk-mcp-ops', version: '0.1.0' })
+  const server = new McpServer({ name: 'signalk-mcp-ops', version: PLUGIN_VERSION })
   const adapter = new SignalKAdapter(app, settings)
   const providers = new SignalK231Adapter(app)
   const register = (name: string, description: string, schema: z.ZodRawShape, run: (args: any) => unknown) => {
@@ -22,7 +23,7 @@ export function createServer(app: ReadAPI, settings: Settings) {
     })
   }
   register('get_server_info', 'Plugin capabilities and adapter compatibility; no host identity.', {}, () => ({
-    pluginVersion: '0.1.0', transport: 'streamable-http', readOnly: true, context: 'vessels.self',
+    pluginVersion: PLUGIN_VERSION, transport: 'streamable-http', readOnly: true, context: 'vessels.self',
     serverVersion: null, publicApiAvailable: typeof app.getSelfPath === 'function' && typeof app.getFeatures === 'function',
     internalAdapter: providers.compatibility(), pathPrefixes: settings.pathPrefixes }))
   register('list_connections', 'Read projected Data Connection inventory; version-sensitive Signal K 2.31 adapter.', {}, () => ({ connections: providers.connections() }))

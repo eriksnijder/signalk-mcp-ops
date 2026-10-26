@@ -33,6 +33,8 @@ test('real MCP client handshake, tools, isolation, rejection and lifecycle', asy
   const client = new Client({ name: 'test', version: '1' })
   await client.connect(new StreamableHTTPClientTransport(url, { requestInit: { headers: { 'X-MCP-Ops-Key': key } } }))
   t.after(() => client.close())
+  assert.equal(client.getServerVersion().version, require('../package.json').version)
+  assert.equal(plugin.getOpenApi().info.version, require('../package.json').version)
   const tools = await client.listTools()
   assert.equal(tools.tools.length, 9)
   assert.deepEqual(tools.tools.map(tool => tool.name).sort(), [
@@ -41,6 +43,7 @@ test('real MCP client handshake, tools, isolation, rejection and lifecycle', asy
   ])
   assert.ok(tools.tools.every(t => t.annotations.readOnlyHint && !t.annotations.destructiveHint))
   const call = (name, args = {}) => client.callTool({ name, arguments: args })
+  assert.equal((await call('get_server_info')).structuredContent.data.pluginVersion, require('../package.json').version)
   const read = await call('read_path', { path: 'navigation.speedOverGround' })
   assert.equal(read.structuredContent.data.value, 3)
   const inventory = (await call('list_plugins')).structuredContent.data.plugins

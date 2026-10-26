@@ -1,4 +1,5 @@
 import type { Plugin, ServerAPI } from '@signalk/server-api'
+import { PLUGIN_VERSION } from './version.js'
 import express, { type RequestHandler } from 'express'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createServer } from './tools.js'
@@ -8,6 +9,14 @@ function pluginFactory(app: ServerAPI): Plugin {
   let settings: Settings | undefined
   let token = ''
   const active = new Set<ReturnType<typeof createServer>>()
+  const jsonParser = express.json({ limit: '64kb' })
+  const parseJson: RequestHandler = (req, res, next) => {
+    jsonParser(req, res, (error?: { status?: number }) => {
+      if (!error) { next(); return }
+      const status = error.status === 413 ? 413 : error.status === 415 ? 415 : 400
+      res.status(status).json({ error: status === 413 ? 'REQUEST_TOO_LARGE' : status === 415 ? 'UNSUPPORTED_ENCODING' : 'INVALID_JSON' })
+    })
+  }
   const guard: RequestHandler = (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store')
     if (!settings) { res.status(503).json({ error: 'PLUGIN_DISABLED' }); return }
@@ -44,7 +53,7 @@ function pluginFactory(app: ServerAPI): Plugin {
       active.clear()
     },
     registerWithRouter(router) {
-      router.post('/mcp', guard, express.json({ limit: '64kb' }), async (req, res) => {
+      router.post('/mcp', guard, parseJson, async (req, res) => {
         if (!settings) { res.sendStatus(503); return }
         if (active.size >= 8) { res.status(429).json({ error: 'BUSY' }); return }
         if (Buffer.byteLength(JSON.stringify(req.body) ?? '') > 65536) { res.sendStatus(413); return }
@@ -68,7 +77,7 @@ function pluginFactory(app: ServerAPI): Plugin {
       router.get('/mcp', guard, unsupported)
       router.delete('/mcp', guard, unsupported)
     },
-    getOpenApi: () => ({ openapi: '3.0.3', info: { title: 'Signal K MCP Operations', version: '0.1.0' },
+    getOpenApi: () => ({ openapi: '3.0.3', info: { title: 'Signal K MCP Operations', version: PLUGIN_VERSION },
       servers: [{ url: '/plugins/signalk-mcp-ops' }], paths: { '/mcp': { post: {
         summary: 'MCP JSON-RPC over stateless Streamable HTTP', security: [{ mcpOpsKey: [] }],
         responses: { '200': { description: 'MCP response' }, '202': { description: 'Notification accepted' }, '401': { description: 'Authentication required' } }

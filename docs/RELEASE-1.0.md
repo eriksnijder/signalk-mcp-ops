@@ -1,0 +1,31 @@
+# Path to 1.0
+
+The candidate is **1.0.0-rc.1**. The intended stable scope is the existing nine read-only operations/diagnostic tools, existing two-header authentication and explicit compatibility boundaries. Logs remain an investigation, not a tenth tool. No promise of OAuth, arbitrary config access, control commands or broad server compatibility is implied by 1.0.
+
+## Implemented preparation
+
+- MCP SDK 1.32.2, Zod 4.6.7 and refreshed compatible dependencies address the audit findings recorded on 2026-10-26. The audit must be repeated on the release commit.
+- Express minimum version advances to 4.22.3. Plugin-owned malformed JSON errors return generic responses; pre-parsed oversized bodies are still rejected. Host parsing limits remain a deployment responsibility.
+- Package version is the single source for MCP/OpenAPI metadata.
+- Automated clean consumer installation checks the tarball without install scripts or a consumer build, then exercises MCP discovery/authentication and a telemetry call.
+- Private vulnerability reporting is enabled; SECURITY.md defines the reporting route and support scope.
+- A development-only log-access probe and source analysis are documented in [SERVER-LOGS.md](SERVER-LOGS.md). No raw log contents are printed or exposed through MCP.
+
+## Evidence required before stable 1.0
+
+- [ ] Review and merge candidate changes; record the final commit.
+- [ ] Node 22/24 project and official Signal K CI pass on that commit.
+- [ ] Explicit Signal K 2.31.0 and 2.35.1 integration runs pass; record exact versions and run links.
+- [ ] Test the exact candidate tarball on the operator's reference server over authenticated HTTPS. Record server, Node, platform and client versions without hostnames or secrets.
+- [ ] Verify missing/wrong/non-admin Signal K credentials and missing/wrong MCP keys are rejected independently. A mocked Express host does not validate Signal K's admin layer.
+- [ ] Confirm nine tool schemas, allowed/denied paths, provider availability/unsupported states, bounded output and withheld status text.
+- [ ] Confirm disable/re-enable, restart/key rotation and representative reverse proxy/ingress limits.
+- [ ] Restore npm authentication interactively and confirm package ownership and 2FA/publishing requirements.
+- [ ] Approve stable 1.0 with documented limitations; rebuild and validate the final versioned artifact.
+- [ ] Verify npm contents and App Store installation after publication.
+
+Historical v0.1.0 validation on Signal K 2.31.0 / Node 22.23.2 remains valid evidence for that version only. Candidate tests are separate; no live candidate result is claimed here.
+
+## Separate log investigation
+
+Source verification confirms admin WebSocket log access on 2.31.0 and 2.35.1. Run `npm run verify:logs` with an operator-provided admin token to verify a live installation; an empty observation is inconclusive. Also check rejection with a non-admin credential if available. A future log MCP tool requires a separate scope and disclosure-policy decision. Neither raw log export nor successful log verification is a requirement for the nine-tool 1.0 scope.

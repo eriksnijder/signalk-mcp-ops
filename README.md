@@ -12,7 +12,7 @@ Under the hood, the plugin adds a read-only Model Context Protocol (MCP) endpoin
 - Provider diagnostics are live runtime-validated on **Signal K Server 2.31.0**. Version-sensitive internals are feature-detected at runtime and fail safely with `UNSUPPORTED` when incompatible.
 - No write operations, configuration changes, restarts, logs, arbitrary code execution or vessel control.
 
-**Release status:** v0.1.0 is publicly available on npm and released on GitHub.
+**Release status:** v0.1.0 is the published stable baseline. This branch prepares **1.0.0-rc.1**, an unpublished candidate with updated dependencies and release checks. See [the 1.0 acceptance checklist](docs/RELEASE-1.0.md).
 
 ## Tools
 
@@ -24,7 +24,7 @@ Telemetry retains native units and timestamps. Provider inventory exports only i
 
 ### Current/manual development install
 
-This package is being prepared for its first public release; these instructions do not imply that it is already published. From a clean repository checkout with Node.js >=22:
+For a local development build, use a clean repository checkout with Node.js >=22. The current candidate has not been published; v0.1.0 remains available on npm:
 
 ```sh
 npm ci
@@ -32,11 +32,11 @@ npm test
 npm pack
 ```
 
-Install the generated `signalk-mcp-ops-0.1.0.tgz` in the Signal K configuration directory, using the account that runs Signal K:
+Install the generated `signalk-mcp-ops-1.0.0-rc.1.tgz` in the Signal K configuration directory, using the account that runs Signal K:
 
 ```sh
 cd <Signal K configuration directory>
-npm install --ignore-scripts /path/to/signalk-mcp-ops-0.1.0.tgz
+npm install --ignore-scripts /path/to/signalk-mcp-ops-1.0.0-rc.1.tgz
 ```
 
 The tarball includes compiled `dist/` code. Installation does not require TypeScript or install-time scripts. Restart Signal K to discover the plugin, deploy the MCP key as described below, then configure and enable the plugin in the Admin UI.
@@ -120,11 +120,11 @@ Use the existing Signal K HTTPS endpoint for remote clients. This version provid
 | Node.js 22.23.2 | Live validated | OpenPlotter / Raspberry Pi, remote Windows MCP client |
 | Node.js 22 / 24 | CI tested | Automated build/tests across supported platforms |
 | Signal K Server 2.31.0 | Integration tested | Official Signal K Plugin CI, Node 22 and 24 |
-| Signal K latest | Integration tested | Official Signal K Plugin CI, Node 22 and 24 |
+| Signal K then-current latest | Historically integration tested | v0.1.0 CI, Node 22 and 24; not a claim about today's latest |
 
-Internal provider access uses runtime feature detection against the documented 2.31.0 shapes and fails with `UNSUPPORTED` when incompatible. No broad Signal K version range is claimed. The compile-time `@signalk/server-api` version remains 2.33.0; MCP SDK remains 1.30.1.
+Internal provider access uses runtime feature detection against the documented 2.31.0 shapes and fails with `UNSUPPORTED` when incompatible. No broad Signal K version range is claimed. The compile-time `@signalk/server-api` version is 2.33.0. The candidate uses MCP SDK 1.32.2 and Zod 4.6.7. Historical live results below belong to v0.1.0; candidate acceptance is recorded separately.
 
-The official Signal K reusable CI runs alongside project CI. Automatic push/PR runs use Node 22/24 with armv7 and server integration disabled. Once this workflow is on the default branch, use Actions → SignalK Plugin CI → Run workflow, enable integration and supply a JSON version list such as `["2.31.0", "latest"]` for optional server integration checks. A CI server-start check is not a replacement for authenticated live MCP tests.
+The official Signal K reusable CI runs alongside project CI. Automatic push/PR runs use Node 22/24 with armv7 and server integration disabled. Once this workflow is on the default branch, use Actions → SignalK Plugin CI → Run workflow, enable integration and supply a JSON version list such as `["2.31.0", "2.35.1"]` for optional server integration checks. A CI server-start check is not a replacement for authenticated live MCP tests.
 
 ## Live end-to-end validation
 
@@ -154,7 +154,7 @@ These are operator-reported verified results, recorded by a documentation-only u
 
 ## Internal provider diagnostics reference
 
-Provider diagnostics were successfully live-tested on OpenPlotter / Raspberry Pi with Signal K Server **2.31.0** and Node.js **22.23.2**, using a remote Windows MCP client over the existing authenticated HTTPS endpoint. See the completed validation record in README.md. Public API types remain 2.33.0 and MCP SDK remains 1.30.1; neither is upgraded here. Runtime shape detection, not an assumed package version, gates internal access. No broad server-version range is claimed.
+Provider diagnostics were successfully live-tested on OpenPlotter / Raspberry Pi with Signal K Server **2.31.0** and Node.js **22.23.2**, using a remote Windows MCP client over the existing authenticated HTTPS endpoint. See the completed validation record in README.md. The candidate retains public API types 2.33.0 and upgrades MCP SDK to 1.32.2. The historical live result does not validate the candidate dependency set. Runtime shape detection, not an assumed package version, gates internal access. No broad server-version range is claimed.
 
 The original adapter is based on tag [v2.31.0](https://github.com/SignalK/signalk-server/tree/v2.31.0), commit `5a3c945ca3f8a0427302ca37a4ae476ee2276adc`:
 
@@ -171,17 +171,24 @@ Node.js >=22 is required. From a clean checkout:
 ```sh
 npm ci
 npm test
-npm pack --dry-run
+npm run audit:runtime
+npm run verify:package
 ```
 
 Tests compile TypeScript and cover protocol, security, lifecycle and diagnostics using the official MCP client. The published entry point is the compiled CommonJS factory `dist/index.js`. The `prepack` hook builds it before packing; no install-time build is needed.
+
+## Server logs
+
+Signal K 2.31.0 and 2.35.1 expose recent server output through an admin WebSocket subscription. The MCP plugin does not export logs. See [the source verification and content-free live probe](docs/SERVER-LOGS.md) for access requirements, retention limits and `npm run verify:logs`.
 
 ## Documentation
 
 - [Specification and API matrix](SPEC.md)
 - [Architecture and compatibility boundaries](ARCHITECTURE.md)
 - [Security model and reporting](SECURITY.md)
-- [GitHub publication and release checklist](docs/PUBLISHING.md)
+- [Release procedure](docs/PUBLISHING.md)
+- [1.0 acceptance checklist](docs/RELEASE-1.0.md)
+- [Server log access investigation](docs/SERVER-LOGS.md)
 - [Contributing](CONTRIBUTING.md)
 
 ## Related work and design references
