@@ -15,7 +15,8 @@
     "url": "https://github.com/eriksnijder/signalk-mcp-ops/issues"
   },
   "signalk": {
-    "displayName": "MCP Operations & Diagnostics"
+    "displayName": "MCP Operations & Diagnostics",
+    "appIcon": "./icon.png"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,7 +29,8 @@
     "SECURITY.md",
     "CONTRIBUTING.md",
     "CHANGELOG.md",
-    "LICENSE"
+    "LICENSE",
+    "icon.png"
   ],
   "keywords": [
     "signalk-node-server-plugin",

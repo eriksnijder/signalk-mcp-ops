@@ -1,6 +1,6 @@
 # Security policy and model
 
-The published v0.1.0 has successful operator-reported live end-to-end validation on OpenPlotter / Signal K, including existing TLS, admin authentication and the additional key (see README.md). This is not a comprehensive security audit; the security model is unchanged. Read-only access still exposes sensitive operational data, potentially including position. Limit the configured path prefixes and authorize only trusted operators and MCP clients.
+The published v0.1.0 has successful operator-reported live end-to-end validation on OpenPlotter / Signal K, including existing TLS, admin authentication and the additional key (see [compatibility record](docs/COMPATIBILITY.md)). This is not a comprehensive security audit; the security model is unchanged. Read-only access still exposes sensitive operational data, potentially including position. Limit the configured path prefixes and authorize only trusted operators and MCP clients.
 
 ## Trust boundaries
 

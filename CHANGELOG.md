@@ -2,6 +2,9 @@
 
 ## 1.0.0-rc.1 — Unreleased
 
+- Lead the README with practical questions; move setup and validation history into focused guides.
+- Add an app icon, Signal K metadata and package verification of the shipped asset.
+
 - Update MCP SDK to 1.32.2, migrate to Zod 4.6.7, require Express >=4.22.3 within major 4, and refresh compatible locked dependencies.
 - Return generic plugin JSON parser errors instead of default error pages; add malformed/oversized/pre-parsed request coverage.
 - Derive MCP and OpenAPI versions from package metadata.

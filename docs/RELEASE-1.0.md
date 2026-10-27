@@ -11,6 +11,8 @@ The candidate is **1.0.0-rc.1**. The intended stable scope is the existing nine 
 - Private vulnerability reporting is enabled; SECURITY.md defines the reporting route and support scope.
 - A development-only log-access probe and source analysis are documented in [SERVER-LOGS.md](SERVER-LOGS.md). No raw log contents are printed or exposed through MCP.
 
+The candidate's initial automated checks passed; exact commits and run links are in [COMPATIBILITY.md](COMPATIBILITY.md). The checklist below still applies to the final reviewed release commit.
+
 ## Evidence required before stable 1.0
 
 - [ ] Review and merge candidate changes; record the final commit.
@@ -20,7 +22,8 @@ The candidate is **1.0.0-rc.1**. The intended stable scope is the existing nine 
 - [ ] Verify missing/wrong/non-admin Signal K credentials and missing/wrong MCP keys are rejected independently. A mocked Express host does not validate Signal K's admin layer.
 - [ ] Confirm nine tool schemas, allowed/denied paths, provider availability/unsupported states, bounded output and withheld status text.
 - [ ] Confirm disable/re-enable, restart/key rotation and representative reverse proxy/ingress limits.
-- [ ] Restore npm authentication interactively and confirm package ownership and 2FA/publishing requirements.
+- [x] Restore npm authentication and confirm package ownership (verified 2026-10-26).
+- [ ] Reconfirm authentication and any required 2FA at publication time.
 - [ ] Approve stable 1.0 with documented limitations; rebuild and validate the final versioned artifact.
 - [ ] Verify npm contents and App Store installation after publication.
 

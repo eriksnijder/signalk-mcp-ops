@@ -9,7 +9,7 @@ The public baseline is [v0.1.0, published on 2026-09-29](https://github.com/erik
 - Run `npm ci --ignore-scripts`, `npm test`, `npm run audit:runtime`, and `npm run verify:package`.
 - Confirm project CI and SignalK Plugin CI are green for that exact commit.
 - Manually run SignalK Plugin CI integration against explicit versions `["2.31.0", "2.35.1"]` with Node 22 and 24. Record versions and run links; a historical `latest` result is not evidence for today's latest server.
-- Run `npm pack`, retain the exact tarball, record its SHA-256 and inspect its contents. The published package must contain compiled code, approved documentation, metadata and license only. No credentials, environment files, test fixtures or local configuration may ship.
+- Run `npm pack`, retain the exact tarball, record its SHA-256 and inspect its contents. The published package must contain compiled code, the declared app icon, approved documentation, metadata and license only. No credentials, environment files, test fixtures or local configuration may ship.
 - Test that exact artifact on the reference Signal K runtime. Verify Signal K admin authentication, missing/wrong MCP key rejection, host/origin rejection, nine tools, allowed/denied paths, provider projections, text withholding, stop/restart and proxy/body-limit behavior. `verify:package` proves clean consumer loading and an MCP exchange with a simulated host; it is not this live acceptance test.
 - Record findings in [the 1.0 acceptance checklist](RELEASE-1.0.md). Do not copy v0.1's historical operator validation as a new result.
 
@@ -17,7 +17,7 @@ The public baseline is [v0.1.0, published on 2026-09-29](https://github.com/erik
 
 Private vulnerability reporting is enabled for this repository, verified on 2026-10-26. Before release, check the [private reporting page](https://github.com/eriksnijder/signalk-mcp-ops/security/advisories/new) and review SECURITY.md.
 
-The local `npm whoami` check returned HTTP 401 on 2026-10-26. The maintainer must restore authentication interactively on their trusted machine:
+Before publishing, confirm the active npm account and package ownership. If authentication has expired, complete an interactive browser login on a trusted machine:
 
 ```sh
 npm login --auth-type=web --registry=https://registry.npmjs.org/
