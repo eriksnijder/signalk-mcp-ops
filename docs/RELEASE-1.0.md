@@ -22,7 +22,8 @@ The candidate's initial automated checks passed; exact commits and run links are
 - [x] Verify missing/wrong/non-admin Signal K credentials and missing/wrong MCP keys are rejected independently (live candidate on Signal K 2.31.0, 2026-10-28; see LIVE-ACCEPTANCE.md). Reconfirm if the authentication implementation changes.
 - [ ] Confirm nine tool schemas, allowed/denied paths, provider availability/unsupported states, bounded output and withheld status text.
 - [x] Confirm service restart recovery with the saved client configuration (live candidate, 2026-10-28; restart operator-reported, successful post-restart MCP calls directly verified).
-- [ ] Confirm disable/re-enable, key rotation and representative reverse proxy/ingress limits.
+- [x] Confirm disable/re-enable: MCP rejected requests with HTTP 503 / PLUGIN_DISABLED while Signal K remained available; re-enabled calls succeeded using saved credentials (2026-10-28).
+- [ ] Confirm key rotation and representative reverse proxy/ingress limits.
 - [x] Restore npm authentication and confirm package ownership (verified 2026-10-26).
 - [ ] Reconfirm authentication and any required 2FA at publication time.
 - [ ] Approve stable 1.0 with documented limitations; rebuild and validate the final versioned artifact.

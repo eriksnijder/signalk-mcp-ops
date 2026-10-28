@@ -58,9 +58,14 @@ On 2026-10-28, the operator reported completing a deliberate Signal K service re
 
 This verifies post-restart recovery through the existing saved client configuration, with the restart action itself operator-reported. It does not measure downtime or establish disable/re-enable or key-rotation behavior.
 
+## Disable/re-enable recovery
+
+At 10:08 UTC on 2026-10-28, after the operator reported disabling the plugin, both `get_server_info` and `read_path` failed with HTTP 503 and the fixed `PLUGIN_DISABLED` error. A separate authenticated initialization request returned the same status/error while public Signal K discovery remained reachable with HTTP 200. This distinguishes the plugin's disabled state from a server outage or credential failure.
+
+After the operator reported enabling the plugin again, at approximately 11:58 UTC the existing Codex connection successfully called `get_server_info`, `read_path`, `list_connections` and `list_plugins` without re-entering credentials. The plugin reported 1.0.0-rc.1, enabled/read-only state and a compatible adapter. A telemetry sample was less than one second old. This verifies the observed disable/re-enable cycle; it does not establish key-rotation behavior.
+
 ## Remaining acceptance work
 
-- Record deliberate disable/re-enable behavior. Service restart recovery, token replacement and recovery from invalid settings were observed; a complete lifecycle test was not.
 - MCP-key rotation was not tested; the existing key was retained.
 - Host allowlist rejection remains unconfirmed: changing Host with the PowerShell client produced a transport exception before any usable HTTP result. TLS checks were not disabled. Unsupported provider shapes were not exercised live. A 66 KB JSON body was rejected, but broader proxy limits were not tested. Local/CI coverage must be distinguished from live evidence.
 - Resolve or explicitly review the observed host parser stack-trace response, and verify the resulting response without exposing its contents.
