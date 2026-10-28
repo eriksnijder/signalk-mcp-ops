@@ -52,9 +52,15 @@ The independently confirmed valid non-admin token was also denied the log subscr
 
 The plugin was enabled in the Admin UI but returned HTTP 503 while startup validation failed. The operator confirmed a 64-character MCP key in the service's main-process environment. After correcting the nonempty `allowedOrigins` setting, startup and MCP connection succeeded. The exact original value was not captured: do not infer that every nonempty origins list is invalid. Valid nonempty URL allowlists are supported; an empty-string entry fails validation.
 
+## Service restart recovery
+
+On 2026-10-28, the operator reported completing a deliberate Signal K service restart. At approximately 10:04 UTC, the existing Codex MCP connection successfully called `get_server_info`, `list_plugins`, `list_connections`, `read_path` and `get_connection_status` without re-entering credentials or reconfiguring the plugin. The plugin reported 1.0.0-rc.1, enabled/read-only state, the same allowed path prefixes, public API availability and a compatible provider adapter. A telemetry sample was less than one second old, and the configured NMEA0183 provider had no recorded last error. No vessel reading or provider message text is reproduced here.
+
+This verifies post-restart recovery through the existing saved client configuration, with the restart action itself operator-reported. It does not measure downtime or establish disable/re-enable or key-rotation behavior.
+
 ## Remaining acceptance work
 
-- Record deliberate disable/re-enable and service restart recovery. Token replacement and recovery from invalid settings were observed; a complete lifecycle test was not.
+- Record deliberate disable/re-enable behavior. Service restart recovery, token replacement and recovery from invalid settings were observed; a complete lifecycle test was not.
 - MCP-key rotation was not tested; the existing key was retained.
 - Host allowlist rejection remains unconfirmed: changing Host with the PowerShell client produced a transport exception before any usable HTTP result. TLS checks were not disabled. Unsupported provider shapes were not exercised live. A 66 KB JSON body was rejected, but broader proxy limits were not tested. Local/CI coverage must be distinguished from live evidence.
 - Resolve or explicitly review the observed host parser stack-trace response, and verify the resulting response without exposing its contents.
