@@ -1,0 +1,42 @@
+# Path to 1.0
+
+The prepared release is **1.0.0**, with live acceptance performed on the unpublished **1.0.0-rc.1** candidate. Preparation does not authorize publication. The intended stable scope is the existing nine read-only operations/diagnostic tools, existing two-header authentication and explicit compatibility boundaries. Logs remain an investigation, not a tenth tool. No promise of OAuth, arbitrary config access, control commands or broad server compatibility is implied by 1.0.
+
+## Implemented preparation
+
+- MCP SDK 1.32.2, Zod 4.6.7 and refreshed compatible dependencies address the audit findings recorded on 2026-10-26. The audit must be repeated on the release commit.
+- Express minimum version advances to 4.22.3. Plugin-owned malformed JSON errors return generic responses; pre-parsed oversized bodies are still rejected. Host parsing limits remain a deployment responsibility.
+- Package version is the single source for MCP/OpenAPI metadata.
+- Automated clean consumer installation checks the tarball without install scripts or a consumer build, then exercises MCP discovery/authentication and a telemetry call.
+- Private vulnerability reporting is enabled; SECURITY.md defines the reporting route and support scope.
+- A development-only log-access probe and source analysis are documented in [SERVER-LOGS.md](SERVER-LOGS.md). No raw log contents are printed or exposed through MCP.
+
+The candidate's initial automated checks passed; exact commits and run links are in [COMPATIBILITY.md](COMPATIBILITY.md). The checklist below still applies to the final reviewed release commit.
+
+## Evidence required before stable 1.0
+
+- [ ] Review and merge candidate changes; record the final commit.
+- [ ] Node 22/24 project and official Signal K CI pass on that commit.
+- [ ] Explicit Signal K 2.31.0 and 2.35.1 integration runs pass; record exact versions and run links.
+- [ ] Test the exact candidate tarball on the operator's reference server over authenticated HTTPS. Record server, Node, platform and client versions without hostnames or secrets.
+- [x] Verify missing/wrong/non-admin Signal K credentials and missing/wrong MCP keys are rejected independently (live candidate on Signal K 2.31.0, 2026-10-28; see LIVE-ACCEPTANCE.md). Reconfirm if the authentication implementation changes.
+- [x] Confirm nine tool schemas, allowed/denied paths, bounded output, provider availability and withheld status text through automated and live candidate tests. Unsupported internal shapes are covered by local/CI fixtures, not forced on the live server.
+- [x] Confirm service restart recovery with the saved client configuration (live candidate, 2026-10-28; restart operator-reported, successful post-restart MCP calls directly verified).
+- [x] Confirm disable/re-enable: MCP rejected requests with HTTP 503 / PLUGIN_DISABLED while Signal K remained available; re-enabled calls succeeded using saved credentials (2026-10-28).
+- [x] Confirm MCP-key rotation: old key rejected, replacement accepted, encrypted client key updated, and existing Codex MCP calls recovered without changing the admin token (2026-10-28).
+- [x] Confirm representative limits at the exposed HTTPS endpoint: unapproved Host/Origin rejected with 403, oversized JSON rejected with 413 (2026-10-28). Broader proxy deployments are not claimed.
+- [x] Review the host parser stack-trace response: maintainer selected preparation of 1.0 with the documented hosting limitation on 2026-10-28. The host response remains unfixed; this decision does not authorize publication.
+- [x] Restore npm authentication and confirm package ownership (verified 2026-10-26).
+- [ ] Reconfirm authentication and any required 2FA at publication time.
+- [ ] Approve stable 1.0 with documented limitations; rebuild and validate the final versioned artifact.
+- [ ] Verify npm contents and App Store installation after publication.
+
+Live candidate checks on 2026-10-27–28 verified all nine tools on Signal K 2.31.0, independent missing/invalid credential rejection, unapproved Origin rejection, allowed/denied path behavior and admin WebSocket log access. See [LIVE-ACCEPTANCE.md](LIVE-ACCEPTANCE.md) for the observed results and remaining gaps. A temporary token was independently confirmed valid and non-admin; MCP access returned HTTP 401 and its log subscription was rejected, while the admin baseline succeeded. The checklist stays open where only part of a requirement has been verified. Historical v0.1.0 evidence remains separate.
+
+## Open live error-handling finding
+
+A malformed JSON request on the reference server returned HTTP 400 with a stack trace. A 66 KB JSON request was rejected with HTTP 413. The plugin sanitizes errors from its own parser, but Signal K installs a host parser before plugin routes. On 2026-10-28 the maintainer selected preparation of 1.0 with this documented hosting limitation. The host-generated response remains unfixed; the decision covers release preparation, not publication. See [LIVE-ACCEPTANCE.md](LIVE-ACCEPTANCE.md#open-finding-host-parser-error-disclosure).
+
+## Separate log investigation
+
+Source verification confirms admin WebSocket log access on 2.31.0 and 2.35.1. A live 2.31.0 probe on 2026-10-28 received a log record without printing or saving its contents; an invalid token was rejected. Run `npm run verify:logs` to reproduce the check on another installation; an empty observation is inconclusive. The live 2.31.0 check also verified denial of a valid non-admin log subscription. A future log MCP tool requires a separate scope and disclosure-policy decision. Neither raw log export nor successful log verification is a requirement for the nine-tool 1.0 scope.

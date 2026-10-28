@@ -1,8 +1,24 @@
 # Changelog
 
-## 0.1.0
+## 1.0.0
 
-Prepared for the first release; not yet published. No release date is assigned.
+- Lead the README with practical questions; move setup and validation history into focused guides.
+- Add an app icon, Signal K metadata and package verification of the shipped asset.
+
+- Update MCP SDK to 1.32.2, migrate to Zod 4.6.7, require Express >=4.22.3 within major 4, and refresh compatible locked dependencies.
+- Return generic plugin JSON parser errors instead of default error pages; add malformed/oversized/pre-parsed request coverage.
+- Derive MCP and OpenAPI versions from package metadata.
+- Add production dependency auditing and a clean consumer tarball check exercising MCP discovery/authentication and telemetry.
+- Enable private vulnerability reporting and define reporting/support policy, npm login recovery and stable 1.0 acceptance requirements.
+- Verify Signal K server-log access in 2.31.0/2.35.1 source and add a development-only probe that returns no log text. The nine-tool MCP scope is unchanged.
+- Verify the candidate live on Signal K 2.31.0 / Node 22.23.2: all nine tools, independent admin/token/key rejection, Host/Origin restrictions, request-size rejection, restart, disable/re-enable and MCP-key rotation.
+- Verify live admin log access and valid non-admin denial without printing or saving log contents.
+- Document the accepted hosting limitation: Signal K 2.31.0 may emit a stack trace for malformed JSON before plugin middleware runs. The plugin does not patch the host error handler.
+- Prepare the stable version and release notes; final artifact validation and publication approval remain separate.
+
+## 0.1.0 — 2026-09-29
+
+First public npm and GitHub release.
 
 - Streamable HTTP MCP endpoint under the plugin route, reusing Signal K HTTP/TLS and admin authentication without an extra listener.
 - Nine read-only tools, protected by a second, environment-held MCP key plus host/origin and path restrictions.
@@ -12,5 +28,3 @@ Prepared for the first release; not yet published. No release date is assigned.
 - Security boundaries: allowlisted configuration projection, arbitrary status-text withholding, bounded output, unproven source correlations, and no write/configuration/control operations or log/file access.
 - Automated protocol, security, lifecycle and diagnostic tests; project CI and official Signal K Plugin CI on Node 22/24. Manual server-integration testing is opt-in; latest Signal K is not live-validated.
 - Signal K App Store metadata, tarball installation, protected systemd key deployment, two-header client authentication and a concrete publication checklist.
-
-Dependency versions and runtime behavior are unchanged by the App Store-readiness preparation. No npm publish, tag or GitHub Release is performed by that change.

@@ -1,16 +1,16 @@
-# Specification: v0.1
+# Specification: 1.0 release candidate
 
 ## Scope and transport
 
 Plugin ID/package: `signalk-mcp-ops`. Node.js >=22. CommonJS plugin factory with `start`, `stop`, `schema`, `registerWithRouter` and `getOpenApi`.
 
-Endpoint: `/plugins/signalk-mcp-ops/mcp`, registered through Signal K's plugin router. POST supports MCP initialization, notifications, tool discovery and calls through the official SDK. Every request gets a fresh server and stateless transport; there are no session identifiers or retained client state. JSON responses are enabled. GET and DELETE return 405 after policy checks; there is no SSE subscription/resumption. SDK protocol negotiation and validation apply. Tools use JSON schemas and advertise read-only/non-destructive/idempotent annotations. These are hints; the implementation enforces the scope by exposing no mutation API.
+Endpoint: `/plugins/signalk-mcp-ops/mcp`, registered through Signal K's plugin router. POST supports MCP initialization, notifications, tool discovery and calls through the official SDK. Every request gets a fresh server and stateless transport; there are no session identifiers or retained client state. JSON responses are enabled. GET and DELETE return 405 after policy checks; there is no SSE subscription/resumption. SDK protocol negotiation and validation apply. Plugin-owned malformed JSON returns a generic `INVALID_JSON` error; parser size/encoding failures return generic 413/415 errors. Earlier host/proxy parsing remains outside the plugin's control. Tools use JSON schemas and advertise read-only/non-destructive/idempotent annotations. These are hints; the implementation enforces the scope by exposing no mutation API.
 
 ## API matrix
 
 Nine tools are registered and returned by `tools/list`. Four planned/reserved entries below remain unregistered.
 
-| Tool | Input | Source | v0.1 behavior / stability |
+| Tool | Input | Source | Candidate behavior / stability |
 | --- | --- | --- | --- |
 | `get_server_info` | none | plugin constants/settings | Implemented; plugin version/capabilities; host version unknown |
 | `list_plugins` | none | `await app.getFeatures()` | Implemented; documented API, validated array; `id`, `name`, `version`, `enabled` |
@@ -58,8 +58,10 @@ diagnose_missing_path retains its four states and adds providerContext with avai
 
 Signal K may parse JSON before the plugin. Its own parser/proxy must therefore enforce an ingress body limit; the plugin additionally rejects oversized pre-parsed objects but cannot undo memory already allocated by the host.
 
+Server log access has been source-verified separately on 2.31.0 and 2.35.1; see [SERVER-LOGS.md](docs/SERVER-LOGS.md). There is no MCP log tool in this candidate.
+
 ## Acceptance and exclusions
 
-Automated checks cover MCP negotiation and tool calls, authorization, host/origin rejection, path restrictions, result bounds, redaction, discovery, lifecycle and official FeatureInfo shape. The operator-reported live validation on OpenPlotter / Signal K confirmed loading/enabling, the plugin route, reuse of existing TLS, Signal K admin authentication, the extra key, and remote Streamable HTTP from an external Windows client (`tools/list`, `get_server_info`, `read_path("navigation.datetime")`); see README.md. Actual restart/reconfiguration behavior, additional proxy scenarios, negative authentication cases and a versioned compatibility matrix remain deployment acceptance work.
+Automated checks cover MCP negotiation and tool calls, authorization, host/origin rejection, path restrictions, result bounds, redaction, discovery, lifecycle and official FeatureInfo shape. The operator-reported live validation on OpenPlotter / Signal K confirmed loading/enabling, the plugin route, reuse of existing TLS, Signal K admin authentication, the extra key, and remote Streamable HTTP from an external Windows client (`tools/list`, `get_server_info`, `read_path("navigation.datetime")`); see [compatibility record](docs/COMPATIBILITY.md). Actual restart/reconfiguration behavior, additional proxy scenarios, negative authentication cases and a versioned compatibility matrix remain deployment acceptance work.
 
 No OAuth server, subscriptions, arbitrary JavaScript, shell commands, file reads, REST proxy, write operations, restart tools, fleet contexts, navigation advice or autonomous vessel control is included.
