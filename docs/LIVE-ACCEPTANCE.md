@@ -25,13 +25,16 @@ Independent requests against the same live HTTPS endpoint produced:
 | Valid admin token and MCP key | MCP initialization succeeds | HTTP 200 |
 | Missing admin token, valid MCP key | Rejected | HTTP 401 |
 | Invalid admin token, valid MCP key | Rejected | HTTP 401 |
+| Valid non-admin token, valid MCP key | Rejected | HTTP 401; token validity and non-admin role independently confirmed |
 | Valid admin token, missing MCP key | Rejected | HTTP 401, `UNAUTHORIZED` |
 | Valid admin token, incorrect MCP key | Rejected | HTTP 401, `UNAUTHORIZED` |
 | Both valid credentials, unapproved Origin | Rejected | HTTP 403, `FORBIDDEN_ORIGIN_OR_HOST` |
 | Both valid credentials, malformed JSON | Rejected | HTTP 400; response includes a stack trace (see below) |
 | Both valid credentials, 66,000-character padding in a JSON object | Rejected | HTTP 413; 17-byte response |
 
-Requests used normal TLS certificate verification and did not follow redirects. No failed-authentication response bodies were copied into this report beyond the plugin's fixed error enums. These checks do not replace a valid non-admin credential test.
+Requests used normal TLS certificate verification and did not follow redirects. No failed-authentication response bodies were copied into this report beyond the plugin's fixed error enums.
+
+At 09:46 UTC on 2026-10-28, a separate operator-provided temporary token was confirmed by `/skServer/loginStatus` as authenticated, non-admin and subject to enabled authentication. An admin initialization baseline returned HTTP 200 with the same MCP key; replacing only the bearer token with the confirmed non-admin token returned HTTP 401. The non-admin token was held only in memory, did not replace the client's saved credentials, and was not saved in the results.
 
 ## Open finding: host parser error disclosure
 
@@ -43,7 +46,7 @@ The tagged [Signal K 2.31.0 server entry point](https://github.com/SignalK/signa
 
 On 2026-10-28, the development-only WebSocket probe received one valid `LOG` record with an admin token and terminated immediately. It returned only `verified / LOG_ENTRY_OBSERVED` and a count; no raw log contents were printed or saved. An invalid token was rejected at the HTTP handshake (`denied / HTTP_AUTH_DENIED`).
 
-This verifies admin access to Signal K's recent server-output stream on the live 2.31.0 installation. It does not verify journald/file access, complete log retention, or valid non-admin denial. No MCP log tool was added.
+The independently confirmed valid non-admin token was also denied the log subscription (`denied / SUBSCRIPTION_REJECTED`); no log chunks were observed or returned. This verifies admin access and non-admin denial for Signal K's recent server-output stream on the live 2.31.0 installation. It does not verify journald/file access or complete log retention. No MCP log tool was added.
 
 ## Setup finding
 
@@ -51,7 +54,6 @@ The plugin was enabled in the Admin UI but returned HTTP 503 while startup valid
 
 ## Remaining acceptance work
 
-- A valid non-admin Signal K token must be rejected by the MCP admin gate; the operator currently has only an admin account. The analogous log-subscription check also remains pending.
 - Record deliberate disable/re-enable and service restart recovery. Token replacement and recovery from invalid settings were observed; a complete lifecycle test was not.
 - MCP-key rotation was not tested; the existing key was retained.
 - Host allowlist rejection remains unconfirmed: changing Host with the PowerShell client produced a transport exception before any usable HTTP result. TLS checks were not disabled. Unsupported provider shapes were not exercised live. A 66 KB JSON body was rejected, but broader proxy limits were not tested. Local/CI coverage must be distinguished from live evidence.

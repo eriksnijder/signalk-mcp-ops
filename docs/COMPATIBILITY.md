@@ -38,4 +38,4 @@ The original reference is tag [v2.31.0](https://github.com/SignalK/signalk-serve
 
 ## Log access
 
-Server-source inspection confirms admin WebSocket log access in 2.31.0 and 2.35.1. A live 2.31.0 probe on 2026-10-28 verified admin log access and invalid-token rejection without printing or saving log contents. Valid non-admin rejection remains untested. This is separate from plugin compatibility. The plugin has no MCP log tool. See [SERVER-LOGS.md](SERVER-LOGS.md).
+Server-source inspection confirms admin WebSocket log access in 2.31.0 and 2.35.1. A live 2.31.0 probe on 2026-10-28 verified admin log access and invalid-token rejection without printing or saving log contents. A separate check confirmed a valid non-admin token and verified rejection by both the MCP admin gate and the log subscription. This is separate from plugin compatibility. The plugin has no MCP log tool. See [SERVER-LOGS.md](SERVER-LOGS.md).

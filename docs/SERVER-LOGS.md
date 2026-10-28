@@ -2,7 +2,7 @@
 
 ## Finding
 
-Signal K Server exposes recent server output through its admin WebSocket connection. This was verified in the source of **2.31.0 and 2.35.1** on 2026-10-26. On 2026-10-28, the development-only probe also verified admin log access on the operator's live 2.31.0 server and rejected an invalid token. It printed/saved no raw log contents; valid non-admin denial remains untested. See [LIVE-ACCEPTANCE.md](LIVE-ACCEPTANCE.md). The MCP plugin still has nine tools and does not expose logs; `get_recent_errors` remains unregistered.
+Signal K Server exposes recent server output through its admin WebSocket connection. This was verified in the source of **2.31.0 and 2.35.1** on 2026-10-26. On 2026-10-28, the development-only probe also verified admin log access on the operator's live 2.31.0 server and rejected an invalid token. It printed/saved no raw log contents. A separate check independently confirmed a valid non-admin token and verified that its log subscription was rejected. See [LIVE-ACCEPTANCE.md](LIVE-ACCEPTANCE.md). The MCP plugin still has nine tools and does not expose logs; `get_recent_errors` remains unregistered.
 
 An authenticated client connects to `wss://<server>/signalk/v1/stream?subscribe=none` and sends:
 
