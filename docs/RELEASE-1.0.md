@@ -23,7 +23,9 @@ The candidate's initial automated checks passed; exact commits and run links are
 - [ ] Confirm nine tool schemas, allowed/denied paths, provider availability/unsupported states, bounded output and withheld status text.
 - [x] Confirm service restart recovery with the saved client configuration (live candidate, 2026-10-28; restart operator-reported, successful post-restart MCP calls directly verified).
 - [x] Confirm disable/re-enable: MCP rejected requests with HTTP 503 / PLUGIN_DISABLED while Signal K remained available; re-enabled calls succeeded using saved credentials (2026-10-28).
-- [ ] Confirm key rotation and representative reverse proxy/ingress limits.
+- [x] Confirm MCP-key rotation: old key rejected, replacement accepted, encrypted client key updated, and existing Codex MCP calls recovered without changing the admin token (2026-10-28).
+- [x] Confirm representative limits at the exposed HTTPS endpoint: unapproved Host/Origin rejected with 403, oversized JSON rejected with 413 (2026-10-28). Broader proxy deployments are not claimed.
+- [ ] Resolve or explicitly review the host parser stack-trace response described below.
 - [x] Restore npm authentication and confirm package ownership (verified 2026-10-26).
 - [ ] Reconfirm authentication and any required 2FA at publication time.
 - [ ] Approve stable 1.0 with documented limitations; rebuild and validate the final versioned artifact.

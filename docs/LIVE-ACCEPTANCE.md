@@ -29,6 +29,7 @@ Independent requests against the same live HTTPS endpoint produced:
 | Valid admin token, missing MCP key | Rejected | HTTP 401, `UNAUTHORIZED` |
 | Valid admin token, incorrect MCP key | Rejected | HTTP 401, `UNAUTHORIZED` |
 | Both valid credentials, unapproved Origin | Rejected | HTTP 403, `FORBIDDEN_ORIGIN_OR_HOST` |
+| Both valid credentials, unapproved Host | Rejected | HTTP 403, `FORBIDDEN_ORIGIN_OR_HOST`; TLS verification retained |
 | Both valid credentials, malformed JSON | Rejected | HTTP 400; response includes a stack trace (see below) |
 | Both valid credentials, 66,000-character padding in a JSON object | Rejected | HTTP 413; 17-byte response |
 
@@ -64,10 +65,20 @@ At 10:08 UTC on 2026-10-28, after the operator reported disabling the plugin, bo
 
 After the operator reported enabling the plugin again, at approximately 11:58 UTC the existing Codex connection successfully called `get_server_info`, `read_path`, `list_connections` and `list_plugins` without re-entering credentials. The plugin reported 1.0.0-rc.1, enabled/read-only state and a compatible adapter. A telemetry sample was less than one second old. This verifies the observed disable/re-enable cycle; it does not establish key-rotation behavior.
 
+## MCP-key rotation and client recovery
+
+At 12:39 UTC on 2026-10-28, after the operator replaced the server's MCP key and restarted Signal K, the local rotation probe sent the same initialization request with the same admin token and two different MCP keys. The previously saved key returned HTTP 401 / `UNAUTHORIZED`; the replacement key returned HTTP 200 with the expected MCP server identity. Only after both checks passed did the helper replace the encrypted client-side key. The admin token was unchanged. Neither plaintext key was written into this report or diagnostic output.
+
+The existing Codex MCP connection then successfully called `get_server_info`, `read_path` and `list_connections`, without restarting Codex or re-entering the admin token. The plugin remained at 1.0.0-rc.1 and telemetry was fresh. This verifies server-side key revocation, acceptance of the replacement key and recovery of the client's helper-based connection.
+
+## Host and ingress checks
+
+At 12:40 UTC on 2026-10-28, a Node HTTPS probe sent an unapproved HTTP Host header while keeping the endpoint hostname for TLS SNI and normal certificate verification. The server returned HTTP 403 / `FORBIDDEN_ORIGIN_OR_HOST` in a 36-byte response. This completes the check that was previously inconclusive with the PowerShell client; TLS verification was never disabled.
+
+Combined live evidence verifies Host and Origin rejection and rejection of a 66 KB JSON body at the exposed HTTPS endpoint. The malformed JSON response still has the documented host stack-trace finding. No broader proxy deployment matrix or unsupported live provider shape was exercised; local/CI coverage remains separate.
+
 ## Remaining acceptance work
 
-- MCP-key rotation was not tested; the existing key was retained.
-- Host allowlist rejection remains unconfirmed: changing Host with the PowerShell client produced a transport exception before any usable HTTP result. TLS checks were not disabled. Unsupported provider shapes were not exercised live. A 66 KB JSON body was rejected, but broader proxy limits were not tested. Local/CI coverage must be distinguished from live evidence.
 - Resolve or explicitly review the observed host parser stack-trace response, and verify the resulting response without exposing its contents.
 - Record exact client/platform versions and, if required for artifact traceability, compare installed runtime files with the candidate artifact.
 - Review/merge the release changes, validate the final versioned release commit and package, reconfirm npm publication access/2FA, obtain stable-release approval, then verify the published installation.
