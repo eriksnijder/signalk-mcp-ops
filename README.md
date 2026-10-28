@@ -32,11 +32,11 @@ Use HTTPS and keep Signal K security enabled. The plugin uses the server's exist
 
 ## Version and compatibility
 
-**v0.1.0 is the published stable version. This branch prepares 1.0.0-rc.1, which is not yet published.** App Store availability depends on indexing; the candidate is installed from a locally built package.
+**Version 1.0.0.** Check [npm](https://www.npmjs.com/package/signalk-mcp-ops) or [GitHub releases](https://github.com/eriksnijder/signalk-mcp-ops/releases) for published availability. App Store availability depends on indexing; an unpublished build can be tested from its local tarball.
 
-- **Candidate automated checks:** Node.js 22 and 24; Signal K integration tests on **2.31.0 and 2.35.1**.
-- **Previous live validation:** v0.1.0 on Signal K 2.31.0 / Node.js 22.23.2 / OpenPlotter Raspberry Pi.
-- **Still required for 1.0:** live acceptance of the candidate on the reference installation.
+- **Automated coverage:** Node.js 22 and 24; Signal K integration tests on **2.31.0 and 2.35.1**.
+- **Live candidate validation:** all nine tools, authentication rejection, restart, disable/re-enable and key rotation on Signal K **2.31.0 / Node.js 22.23.2 / OpenPlotter Raspberry Pi**.
+- **Known hosting limitation:** Signal K 2.31.0 can return a stack trace for malformed JSON before the plugin handles the request. See [deployment responsibilities](SECURITY.md#deployment-responsibilities).
 
 See [compatibility and validation evidence](docs/COMPATIBILITY.md) for the distinction between automated tests and live results.
 

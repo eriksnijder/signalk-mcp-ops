@@ -1,6 +1,6 @@
 # Release procedure
 
-The public baseline is [v0.1.0, published on 2026-09-29](https://github.com/eriksnijder/signalk-mcp-ops/releases/tag/v0.1.0). Current development prepares **1.0.0-rc.1**. A release candidate is not stable 1.0 and must not replace npm's `latest` tag. Publication, tagging and a GitHub Release require a separate release decision.
+The public baseline is [v0.1.0, published on 2026-09-29](https://github.com/eriksnijder/signalk-mcp-ops/releases/tag/v0.1.0). Current development prepares **1.0.0**; the unpublished 1.0.0-rc.1 candidate supplied the live acceptance evidence. A release candidate is not stable 1.0 and must not replace npm's `latest` tag. Publication, tagging and a GitHub Release require a separate release decision.
 
 ## 1. Verify the reviewed commit
 
@@ -31,14 +31,14 @@ Check the intended version with `npm view signalk-mcp-ops versions --json` and v
 
 ## 3. Publish only after a release decision
 
-For an approved release candidate, publish the inspected artifact with a non-default tag:
+The prepared stable artifact is `signalk-mcp-ops-1.0.0.tgz`. After completing acceptance and receiving explicit publication approval, publish that exact inspected artifact:
 
 ```sh
-npm publish ./signalk-mcp-ops-1.0.0-rc.1.tgz --access public --tag next
+npm publish ./signalk-mcp-ops-1.0.0.tgz --access public --tag latest
 ```
 
-After verification, tag the exact source commit `v1.0.0-rc.1` and create a GitHub **prerelease**. Verify npm's `latest` tag still points to the previous stable release. Do not assume App Store indexing of a prerelease.
+Verify the registry version, integrity and packaged files, then tag the matching source commit `v1.0.0` and create the stable GitHub Release. Record the actual publication date in the GitHub Release and release-verification report. If any packaged source or documentation changes after inspection, rebuild and revalidate the artifact before publication. Never overwrite or reuse a published version.
 
-For stable 1.0, complete acceptance, update the package to `1.0.0`, rebuild and repeat artifact checks. That is a new artifact, not simply a relabel of the RC. After approval, publish the exact stable tarball with `--tag latest`, verify its registry contents, then tag the matching commit and create the stable GitHub Release. Add the real release date to the changelog. Never overwrite/reuse a published version.
+For a future approved prerelease, use a prerelease version and a non-default tag such as `next`, and create a GitHub prerelease. Keep `latest` on the previous stable version until stable publication is approved; App Store indexing of a prerelease is not assumed.
 
 Finally verify Signal K App Store indexing and installation, configure the protected key, and repeat authenticated remote MCP acceptance. Record actual tested versions and remaining limits in the release notes.

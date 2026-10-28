@@ -1,6 +1,6 @@
 {
   "name": "signalk-mcp-ops",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "description": "Read-only MCP operations and diagnostics plugin for Signal K",
   "license": "MIT",
   "author": {

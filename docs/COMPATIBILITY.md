@@ -2,7 +2,11 @@
 
 The package's Node.js requirement is **22 or newer**. Automated tests cover Node 22 and 24. Compile-time Signal K API types are 2.33.0; they do not establish a supported server-version range. The candidate uses MCP SDK 1.32.2 and Zod 4.6.7; exact dependencies are recorded in package-lock.json.
 
-## Candidate: 1.0.0-rc.1
+## Prepared release: 1.0.0
+
+At preparation on 2026-10-28, the 1.0 package was unpublished. Live acceptance below was performed on 1.0.0-rc.1. Final versioned package checks, exact commit/CI links and artifact hashes are recorded with the release artifact and the [release PR](https://github.com/eriksnijder/signalk-mcp-ops/pull/5). Do not present candidate evidence as a live installation of the final tarball.
+
+## Candidate evidence: 1.0.0-rc.1
 
 On commit `9e1979cefe5d176ff14180a9c8734bb1a075584f`, the following checks passed on 2026-10-26:
 

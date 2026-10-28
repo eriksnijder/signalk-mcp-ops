@@ -79,8 +79,9 @@ Combined live evidence verifies Host and Origin rejection and rejection of a 66 
 
 ## Remaining acceptance work
 
-- Resolve or explicitly review the observed host parser stack-trace response, and verify the resulting response without exposing its contents.
 - Record exact client/platform versions and, if required for artifact traceability, compare installed runtime files with the candidate artifact.
 - Review/merge the release changes, validate the final versioned release commit and package, reconfirm npm publication access/2FA, obtain stable-release approval, then verify the published installation.
+
+On 2026-10-28 the maintainer selected preparation of stable 1.0 with the documented upstream host error-handler limitation. That review does not mean the host was fixed or authorize publication.
 
 The successful connection and negative authentication tests advance candidate acceptance; they do not constitute stable-release approval or a comprehensive security audit.

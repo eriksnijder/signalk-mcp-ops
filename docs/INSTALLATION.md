@@ -4,17 +4,17 @@
 
 ## Install the published version
 
-Find **MCP Operations & Diagnostics** in the Signal K App Store. The published stable package is currently **v0.1.0**; the **1.0.0-rc.1** candidate is not yet published. If the listing is not available, install the stable package manually from your Signal K configuration directory:
+Find **MCP Operations & Diagnostics** in the Signal K App Store. To install npm's published stable version manually, run the following from your Signal K configuration directory. Check [npm](https://www.npmjs.com/package/signalk-mcp-ops) for the current published version; use the local tarball instructions below for an unpublished build:
 
 ```sh
-npm install --ignore-scripts signalk-mcp-ops@0.1.0
+npm install --ignore-scripts signalk-mcp-ops
 ```
 
 Restart Signal K to discover the plugin. It is disabled by default. Complete the key and access configuration below before enabling it. This version has no separate web interface; you use it through a compatible MCP client.
 
-## Test the release candidate
+## Test the prepared 1.0 release
 
-For a local development build, use a clean repository checkout with Node.js >=22. The current candidate has not been published; v0.1.0 remains available on npm:
+For a local development build, use a clean repository checkout with Node.js >=22. The following builds a local package; it does not publish it to npm:
 
 ```sh
 npm ci
@@ -22,11 +22,11 @@ npm test
 npm pack
 ```
 
-Install the generated `signalk-mcp-ops-1.0.0-rc.1.tgz` in the Signal K configuration directory, using the account that runs Signal K:
+Install the generated `signalk-mcp-ops-1.0.0.tgz` in the Signal K configuration directory, using the account that runs Signal K:
 
 ```sh
 cd <Signal K configuration directory>
-npm install --ignore-scripts /path/to/signalk-mcp-ops-1.0.0-rc.1.tgz
+npm install --ignore-scripts /path/to/signalk-mcp-ops-1.0.0.tgz
 ```
 
 The tarball includes compiled `dist/` code. Installation does not require TypeScript or install-time scripts. Restart Signal K to discover the plugin, deploy the MCP key as described below, then configure and enable the plugin in the Admin UI.
