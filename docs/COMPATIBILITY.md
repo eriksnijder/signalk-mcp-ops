@@ -13,7 +13,7 @@ On commit `9e1979cefe5d176ff14180a9c8734bb1a075584f`, the following checks passe
 | Server integration | Signal K **2.31.0 and 2.35.1**, each on Node 22/24 | [Integration run](https://github.com/eriksnijder/signalk-mcp-ops/actions/runs/40386165916) |
 | Dependency audit | Zero known production vulnerabilities at check time | Project CI audit job |
 
-These links identify a specific tested commit. Later changes must pass their own PR checks, and the reviewed release commit must be verified before publication. CI installation/startup and simulated-host MCP tests do not replace authenticated live acceptance through the operator's TLS/proxy setup. Live candidate acceptance remains pending; see [RELEASE-1.0.md](RELEASE-1.0.md).
+These links identify a specific tested commit. Later changes must pass their own PR checks, and the reviewed release commit must be verified before publication. CI installation/startup and simulated-host MCP tests do not replace authenticated live acceptance through the operator's TLS/proxy setup. Live candidate checks on Signal K 2.31.0 passed on 2026-10-27–28, including all nine tools and independent missing/invalid credential rejection. Some acceptance checks remain pending; see [LIVE-ACCEPTANCE.md](LIVE-ACCEPTANCE.md) and [RELEASE-1.0.md](RELEASE-1.0.md).
 
 The manual **SignalK Plugin CI** workflow accepts explicit server versions. Use `["2.31.0", "2.35.1"]` when reproducing this matrix. Record exact versions and run links rather than treating an old `latest` result as evidence for a newer server.
 
@@ -38,4 +38,4 @@ The original reference is tag [v2.31.0](https://github.com/SignalK/signalk-serve
 
 ## Log access
 
-Server-source inspection confirms admin WebSocket log access in 2.31.0 and 2.35.1. This is separate from plugin compatibility and has not been verified on the operator's live server. The plugin has no MCP log tool. See [SERVER-LOGS.md](SERVER-LOGS.md).
+Server-source inspection confirms admin WebSocket log access in 2.31.0 and 2.35.1. A live 2.31.0 probe on 2026-10-28 verified admin log access and invalid-token rejection without printing or saving log contents. Valid non-admin rejection remains untested. This is separate from plugin compatibility. The plugin has no MCP log tool. See [SERVER-LOGS.md](SERVER-LOGS.md).

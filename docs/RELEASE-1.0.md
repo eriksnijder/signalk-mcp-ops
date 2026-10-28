@@ -27,8 +27,8 @@ The candidate's initial automated checks passed; exact commits and run links are
 - [ ] Approve stable 1.0 with documented limitations; rebuild and validate the final versioned artifact.
 - [ ] Verify npm contents and App Store installation after publication.
 
-Historical v0.1.0 validation on Signal K 2.31.0 / Node 22.23.2 remains valid evidence for that version only. Candidate tests are separate; no live candidate result is claimed here.
+Live candidate checks on 2026-10-27–28 verified all nine tools on Signal K 2.31.0, independent missing/invalid credential rejection, unapproved Origin rejection, allowed/denied path behavior and admin WebSocket log access. See [LIVE-ACCEPTANCE.md](LIVE-ACCEPTANCE.md) for the observed results and remaining gaps. The operator currently has only an admin account, so valid non-admin rejection remains untested. The checklist stays open where only part of a requirement has been verified. Historical v0.1.0 evidence remains separate.
 
 ## Separate log investigation
 
-Source verification confirms admin WebSocket log access on 2.31.0 and 2.35.1. Run `npm run verify:logs` with an operator-provided admin token to verify a live installation; an empty observation is inconclusive. Also check rejection with a non-admin credential if available. A future log MCP tool requires a separate scope and disclosure-policy decision. Neither raw log export nor successful log verification is a requirement for the nine-tool 1.0 scope.
+Source verification confirms admin WebSocket log access on 2.31.0 and 2.35.1. A live 2.31.0 probe on 2026-10-28 received a log record without printing or saving its contents; an invalid token was rejected. Run `npm run verify:logs` to reproduce the check on another installation; an empty observation is inconclusive. Also check rejection with a non-admin credential if available. A future log MCP tool requires a separate scope and disclosure-policy decision. Neither raw log export nor successful log verification is a requirement for the nine-tool 1.0 scope.

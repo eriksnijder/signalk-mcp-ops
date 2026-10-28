@@ -80,7 +80,13 @@ Example options, with a generic local host:
 }
 ```
 
-Use your deployment's incoming Host header, including its port, in `allowedHosts`. Present Origin headers must match `allowedOrigins` exactly; an empty list permits clients that omit Origin and rejects requests that carry one. Cross-origin CORS support is not provided. A reverse proxy must preserve an allowed Host; forwarded host headers do not determine trust.
+Use your deployment's incoming Host header, including its port, in `allowedHosts`. Enter a host and port, without a URL scheme or path. For a native MCP client that sends no Origin, leave `allowedOrigins` as an empty list: remove blank rows rather than saving an empty-string entry. A nonempty list must contain valid, exact origin URLs. Present Origin headers must match `allowedOrigins` exactly; an empty list permits clients that omit Origin and rejects requests that carry one. Cross-origin CORS support is not provided. A reverse proxy must preserve an allowed Host; forwarded host headers do not determine trust.
+
+## Troubleshooting startup
+
+The Admin UI enabled switch does not by itself confirm successful startup. The ready status is **Read-only MCP ready**. HTTP 503 with `PLUGIN_DISABLED` means startup has not completed successfully or the plugin is stopped. Check the saved settings and that `SIGNALK_MCP_OPS_KEY` is present in the running Signal K process environment with 32–512 characters. Invalid settings, including a blank `allowedOrigins` entry, also prevent startup. A key file alone is insufficient unless the service loads it. After changing the service environment, restart Signal K.
+
+HTTP 401 means the admin token or MCP key was rejected; HTTP 403 can indicate insufficient admin permissions or the Host/Origin policy. Do not rotate credentials merely because the plugin returned HTTP 503.
 
 ## MCP client authentication
 
