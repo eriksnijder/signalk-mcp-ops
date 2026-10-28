@@ -28,8 +28,16 @@ Independent requests against the same live HTTPS endpoint produced:
 | Valid admin token, missing MCP key | Rejected | HTTP 401, `UNAUTHORIZED` |
 | Valid admin token, incorrect MCP key | Rejected | HTTP 401, `UNAUTHORIZED` |
 | Both valid credentials, unapproved Origin | Rejected | HTTP 403, `FORBIDDEN_ORIGIN_OR_HOST` |
+| Both valid credentials, malformed JSON | Rejected | HTTP 400; response includes a stack trace (see below) |
+| Both valid credentials, 66,000-character padding in a JSON object | Rejected | HTTP 413; 17-byte response |
 
 Requests used normal TLS certificate verification and did not follow redirects. No failed-authentication response bodies were copied into this report beyond the plugin's fixed error enums. These checks do not replace a valid non-admin credential test.
+
+## Open finding: host parser error disclosure
+
+The malformed JSON request was rejected, but its 1,100-byte response contained `SyntaxError` and stack-frame patterns. Only classification booleans and response size were saved; no stack text or server filesystem paths were printed or saved. This is not a successful generic-error acceptance check.
+
+The tagged [Signal K 2.31.0 server entry point](https://github.com/SignalK/signalk-server/blob/v2.31.0/src/index.ts) installs its JSON body parser before security and plugin routes. The candidate's route-local parser cannot sanitize an error raised before its route is reached. The observed response is consistent with that host-level path; the exact emitting error handler and deployment remediation remain to be confirmed. Do not assume a plugin-only change or an unverified environment flag fixes the host response. Resolve or explicitly review this limitation before stable release acceptance.
 
 ## Live server log access
 
@@ -46,7 +54,8 @@ The plugin was enabled in the Admin UI but returned HTTP 503 while startup valid
 - A valid non-admin Signal K token must be rejected by the MCP admin gate; the operator currently has only an admin account. The analogous log-subscription check also remains pending.
 - Record deliberate disable/re-enable and service restart recovery. Token replacement and recovery from invalid settings were observed; a complete lifecycle test was not.
 - MCP-key rotation was not tested; the existing key was retained.
-- Host allowlist rejection, ingress/body limits and unsupported provider shapes were not separately exercised live. Local/CI coverage must be distinguished from live evidence.
+- Host allowlist rejection remains unconfirmed: changing Host with the PowerShell client produced a transport exception before any usable HTTP result. TLS checks were not disabled. Unsupported provider shapes were not exercised live. A 66 KB JSON body was rejected, but broader proxy limits were not tested. Local/CI coverage must be distinguished from live evidence.
+- Resolve or explicitly review the observed host parser stack-trace response, and verify the resulting response without exposing its contents.
 - Record exact client/platform versions and, if required for artifact traceability, compare installed runtime files with the candidate artifact.
 - Review/merge the release changes, validate the final versioned release commit and package, reconfirm npm publication access/2FA, obtain stable-release approval, then verify the published installation.
 
