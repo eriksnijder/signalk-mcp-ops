@@ -1,4 +1,4 @@
-# Specification: 1.0 release candidate
+# Specification: development build
 
 ## Scope and transport
 
@@ -18,7 +18,7 @@ Nine tools are registered and returned by `tools/list`. Four planned/reserved en
 | `list_paths` | optional `prefix`, `offset=0`, `limit=50` | bounded traversal via `getSelfPath` | Implemented; sorted page, `nextOffset`, `truncated` |
 | `inspect_path_sources` | `path` | leaf `$source` and `values` keys | Implemented; no raw source connection configuration |
 | `diagnose_missing_path` | `path` | path read plus timestamp | Implemented; missing/fresh/stale/unknown freshness |
-| `get_security_status` | none | plugin policy | Implemented; host security unknown, TLS deployment-dependent |
+| `get_security_status` | none | plugin policy | Implemented; native security verified available, TLS deployment-dependent |
 | `list_connections` | none | isolated 2.31 internal adapter | Implemented; connections with id, enabled, type only |
 | `get_connection` | `id` | planned projected provider config | Planned/reserved; not registered |
 | `get_connection_status` | `id` | isolated 2.31 getProviderStatus adapter | Implemented; safe status projection or unknown; NOT_FOUND for absent connection |
@@ -32,11 +32,19 @@ Internal provider reads are restricted to the isolated 2.31 adapter and runtime 
 
 Successful results use `{ "ok": true, "data": ... }`; failures use `{ "ok": false, "error": { "code": "..." } }` with MCP `isError: true`. Both JSON text and `structuredContent` contain the envelope. SDK input/protocol validation errors follow the SDK contract instead. Error codes: `NOT_FOUND`, `NOT_A_VALUE_PATH`, `PATH_NOT_ALLOWED`, `UNSUPPORTED`, `RESULT_TOO_LARGE`, `INVALID_DATA`, `INTERNAL_ERROR`. Raw exception messages are never returned.
 
+## Native permissions (unreleased)
+
+The MCP route requires an explicit native Signal K bearer token and the additional MCP key. Authenticated readonly/readwrite/admin identities may use telemetry under the intersection of configured prefixes and exact native self-context path/source read permission. Native admins do not bypass these ACLs. `list_connections`, `get_connection_status` and `list_plugins` additionally require admin role; non-admin `get_server_info` omits internal-adapter detail and diagnosis omits provider context. All nine tools remain discoverable with explicit admin-only descriptions.
+
+Additional codes: `ADMIN_REQUIRED`, `PATH_UNAVAILABLE`, `BEARER_TOKEN_REQUIRED`, `INVALID_TOKEN`, `PERMISSION_DENIED`, `SIGNALK_SECURITY_UNAVAILABLE` and `PLUGIN_DISABLED`. Transport authentication errors use 401/403/503; tool failures keep the response envelope. Missing/dummy security and unavailable permission-aware routing fail closed. Only the Authorization header is used for native authentication, never cookies, query tokens or an inherited HTTP principal. See [complete permission behavior](docs/READ-ONLY-USERS.md).
+
+`list_paths` paginates only native-authorized selected-source leaves. `inspect_path_sources` requires an authorized selected value and filters each alternate source ID. Missing/unknown source provenance is readable only when Signal K confirms no ACLs and grants the read. With ACLs, absent and denied readings both return `PATH_UNAVAILABLE` and diagnosis reports `unavailable` without values, sources or provider context. With no ACLs, absent paths retain `NOT_FOUND` / `missing`. The native ACL rule order remains authoritative.
+
 `list_plugins` returns a bounded `plugins` array and `truncated`. Each entry contains `id`, `name`, `version`, and `enabled`. Missing or non-string names are null; names are capped at 256 characters. Unexpected FeatureInfo shapes still return `UNSUPPORTED`.
 
 `read_path` returns `path`, `value`, `timestamp`, `ageSeconds`, `stale`, `source`, and `units`. Missing timestamps/freshness/source/units are null. Null sensor values remain null. Age is computed using server time, clamped to zero for future timestamps; clock correctness is not verified. Staleness uses the operator's threshold (default 300 seconds), which may be unsuitable for infrequently updated paths. Native Signal K units are retained; no conversions or interpolations occur.
 
-`diagnose_missing_path` maps only `NOT_FOUND` to a successful `missing` diagnosis. Denied paths and adapter errors remain errors. Missing data does not prove that a sensor or connection is broken.
+`diagnose_missing_path` maps `NOT_FOUND` to `missing` and `PATH_UNAVAILABLE` to `unavailable`. Other adapter errors remain errors. Unavailable does not reveal whether the path exists. Missing data does not prove that a sensor or connection is broken.
 
 ## Provider diagnostics contract
 
@@ -44,7 +52,7 @@ list_connections returns { connections: [{ id, enabled, type }] }. options/subOp
 
 Free-form message and lastError values can echo credentials. Only complete generic messages (Connected, Disconnected, Started, Stopped, Connecting, Connection closed) pass through; all other strings become [withheld: untrusted provider text]. This deliberately trades message detail for preventing arbitrary config/credential export. Presence of historical errors and their timestamps is retained. Identifier fields are operator metadata, not a place to store secrets.
 
-diagnose_missing_path retains its four states and adds providerContext with availability, projected connections/statuses, and a separately labelled assessment counting enabled providers reporting errors. Present paths also include selected/available sources and namespace-based correlation candidates, always marked proven:false because upstream labels may be preserved. No candidate is asserted to own a path. Missing paths have no inferred source ownership. Unavailable/oversized context returns available:false with an error code while preserving path state. get_server_info reports publicApiAvailable (method presence) and internalAdapter {referenceVersion, compatible, code?}; compatibility is shape compatibility, not certification or the detected server version.
+Admin diagnoses of authorized paths include providerContext with availability, projected connections/statuses, and a separately labelled assessment counting enabled providers reporting errors. Present paths also include authorized selected/available sources and namespace-based correlation candidates, always marked proven:false because upstream labels may be preserved. No candidate is asserted to own a path. Missing paths have no inferred source ownership. Unavailable/oversized context returns available:false with an error code while preserving path state. Non-admin diagnoses omit operational context with ADMIN_REQUIRED; permission-unavailable diagnoses include no provider context. Admin get_server_info reports publicApiAvailable (method presence) and internalAdapter {referenceVersion, compatible, code?}; non-admin internalAdapter is withheld with ADMIN_REQUIRED. Compatibility is shape compatibility, not certification or the detected server version.
 
 ## Bounds
 
@@ -52,7 +60,7 @@ diagnose_missing_path retains its four states and adds providerContext with avai
 - Paths: 1-256 characters, dotted alphanumeric/underscore/hyphen segments; prototype-related segments rejected.
 - Only configured prefixes in `vessels.self`; no arbitrary contexts, full tree or config reads.
 - Discovery: <=10,000 visited nodes and depth <=20; pages <=100 paths; offset <=10,000. Pagination is a changing view, not a snapshot. `truncated` signals traversal limits, while `nextOffset` signals available further pages.
-- Inventories/source identifiers: <=100 entries. Plugin inventory and sources report truncation.
+- Inventories/source identifiers: <=100 returned entries. Source inspection scans <=1,000 source identifiers before native filtering; larger input fails with RESULT_TOO_LARGE. Plugin inventory and sources report truncation.
 - Data projection: <=2,000 nodes, depth <=12, strings <=4,096 characters, encoded data <=32 KiB. Oversized results fail; smaller pages or more specific paths can help. Envelopes add a small amount of overhead.
 - Request body <=64 KiB; <=8 active requests; 15-second connection deadline. There is no requests-per-minute limiter. The deadline cannot preempt synchronous host code; bounded traversal limits plugin work.
 
