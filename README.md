@@ -1,5 +1,3 @@
-<img src="./icon.png" alt="Signal K MCP Operations icon" width="96" height="96" align="right">
-
 # Signal K MCP Operations
 
 ## Ask your boat's data a question
@@ -32,7 +30,7 @@ Use HTTPS and keep Signal K security enabled. The plugin uses the server's exist
 
 ## Version and compatibility
 
-**Version 1.0.0.** Check [npm](https://www.npmjs.com/package/signalk-mcp-ops) or [GitHub releases](https://github.com/eriksnijder/signalk-mcp-ops/releases) for published availability. App Store availability depends on indexing; an unpublished build can be tested from its local tarball.
+**Version 1.0.1.** Check [npm](https://www.npmjs.com/package/signalk-mcp-ops) or [GitHub releases](https://github.com/eriksnijder/signalk-mcp-ops/releases) for published availability. App Store availability depends on indexing; an unpublished build can be tested from its local tarball.
 
 - **Automated coverage:** Node.js 22 and 24; Signal K integration tests on **2.31.0 and 2.35.1**.
 - **Live candidate validation:** all nine tools, authentication rejection, restart, disable/re-enable and key rotation on Signal K **2.31.0 / Node.js 22.23.2 / OpenPlotter Raspberry Pi**.

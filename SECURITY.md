@@ -27,6 +27,12 @@ All text returned by sensors/plugins is untrusted data and may contain prompt in
 
 Plugin exceptions become generic codes. The plugin never logs requests, headers, keys, raw config or response payloads. Hosting proxies and Signal K may have independent logging; configure those appropriately. Status messages contain no credentials. `get_security_status` reports only plugin policy, not a security certification of the host.
 
+## App Store audit indicators
+
+Compare an indicator with the exact package version and scan date in the [public registry record](https://signalk.org/signalk-plugin-registry/plugins/signalk-mcp-ops.json). Signal K caches registry data and plugin details, so an installed newer version can temporarily display an older score or audit badge. Refresh the App Store metadata and reload the detail page before interpreting a stale badge.
+
+On 2026-10-29, the registry's 1.0.0 scan reported zero high, moderate and critical findings; its 0.1.0 record still reported two high findings. Refreshing the reference server's App Store cache changed its displayed detail response from score 75 / audit warning to score 85 / audit OK. A fresh full audit of this repository also reported zero vulnerabilities. These are dated observations, not guarantees against future advisories. The host installation's audit and other plugins' Node engine requirements must be assessed separately.
+
 ## Reporting
 
 Use [GitHub private vulnerability reporting](https://github.com/eriksnijder/signalk-mcp-ops/security/advisories/new) to contact the repository maintainer, Erik Snijder. Private reporting was enabled and verified on 2026-10-26. Include the affected package/server/Node versions, a minimal synthetic reproduction and the impact. Do not attach live credentials, vessel data or full configurations. If the private form is unavailable, open a public issue requesting a private reporting route without vulnerability details.

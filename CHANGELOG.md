@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 — Unreleased
+
+- Remove the duplicate HTML logo from the README: Signal K renders it as text and already displays the app icon in its header. Start directly with the example questions.
+- Clarify version-specific registry audit evidence and stale App Store indicators. The 1.0.0 registry scan dated 2026-10-29 reports zero high/moderate/critical findings; the older high warning belongs to 0.1.0. No dependency changes are needed for that cached warning.
+
 ## 1.0.0
 
 - Lead the README with practical questions; move setup and validation history into focused guides.
