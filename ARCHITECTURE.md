@@ -2,12 +2,13 @@
 
 ```mermaid
 flowchart TD
-  Client[MCP client] --> HTTP[Signal K HTTP/TLS and admin route protection]
-  HTTP --> Guard[Plugin enabled / Host / Origin / secret checks]
+  Client[MCP client] --> HTTP[Signal K HTTP/TLS and readonly route classification]
+  HTTP --> Guard[Enabled / Host / Origin / MCP key / explicit native bearer]
   Guard --> Transport[Stateless Streamable HTTP transport]
   Transport --> Tools[Explicit read-only tools]
   Tools --> Adapter[Signal K read adapter]
-  Adapter --> Public[getSelfPath / getFeatures]
+  Adapter --> Policy[Configured prefixes and native path/source ACLs]
+  Policy --> Public[getSelfPath / admin-only getFeatures]
   Tools --> Output[Field projection / redaction / bounds]
   Output --> Client
 ```
@@ -20,6 +21,8 @@ flowchart TD
 
 `src/adapter.ts` reads the public Signal K data model. Its narrowed `ReadAPI` type exposes just `getSelfPath` and `getFeatures`. It projects plugin inventory fields (`id`, `name`, `version`, `enabled`) and traverses only allowed telemetry roots. It does not receive a caller-controlled URL, file path, executable or method name. Full config/log export adapters intentionally do not exist.
 
+`src/auth.ts` isolates the unreleased native authentication/ACL bridge. It requires enabled, synchronous Signal K security hooks and constructs a fresh bearer-only authentication object per check. A request-scoped access context binds the identity, plugin lifecycle and exact self-context path/source grants. All telemetry/discovery/source tools use that context. Admin-only inventory checks run before host access and again after async reads. Non-admin server information and diagnosis omit internal provider details. The native router may be registered after startup; admission remains closed until its permission-aware classification is available. See [permission contract and tests](docs/READ-ONLY-USERS.md).
+
 `src/safety.ts` holds validation, prefix checks, constant-length hashed secret comparison and bounded safe copying. Redaction is defense in depth. It is not a substitute for field allowlists or an authorization boundary.
 
 `src/version.ts` reads the installed package version for consistent MCP and OpenAPI metadata. Development-only scripts verify a clean tarball installation and direct Signal K log access; they are not loaded by the plugin. See [server log investigation](docs/SERVER-LOGS.md).
@@ -27,7 +30,7 @@ flowchart TD
 ## Decisions
 
 - Run inside Signal K to reuse its lifecycle, network listener and official data access. No additional service, hostname, certificate or port is assumed.
-- Keep the default admin-only plugin route and add a separate environment-held key. A custom header avoids consuming Signal K's Authorization header. Per-user/path permissions are not propagated through this key; access is operator-level within configured prefixes.
+- In the development build, classify MCP routes as readonly and verify existing native bearer identities, including per-path/source ACLs; keep operational inventories admin-only. Retain the separate environment-held key and exact Host/Origin policy. Published 1.0.1 uses the earlier admin-only model.
 - Use named tools for discoverability and small, bounded responses. No code execution tool is exposed.
 - Prefer supported APIs. Server-internal functions need isolated, versioned adapters and an explicit unsupported state. Published API types do not establish runtime compatibility by themselves.
 - Return native units, timestamps and unknown values honestly. Do not infer system health from absence of data.
@@ -55,6 +58,8 @@ In-process execution shares Signal K's event loop. Result and traversal bounds c
 ## Design references
 
 [sailingnaturali/signalk-mcp](https://github.com/sailingnaturali/signalk-mcp) demonstrates discrete tools and path discovery. [VesselSense/signalk-mcp-server](https://github.com/VesselSense/signalk-mcp-server) demonstrates compact results and flexible Signal K querying. This project adopts the ideas of discoverable tools and bounded responses, with an in-process operations focus. Its implementation is original; no code from either repository was copied. Arbitrary code execution and vessel-specific voice/navigation behavior are outside this project's scope.
+
+The native identity/ACL design was also informed by a comparison with [arodus/signalk-mcp 0.3.1](https://github.com/arodus/signalk-mcp/tree/v0.3.1), then verified against Signal K's router/security sources and real 2.31.0/2.35.1 runtime fixtures. This plugin retains a narrower, read-only diagnostic scope, the additional MCP key and its own implementation/tests.
 
 Primary interface references: [Signal K plugin documentation](https://demo.signalk.org/documentation/Developing/Plugins.html), [Signal K server API](https://github.com/SignalK/signalk-server/tree/master/packages/server-api), and the [official MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk). See `package-lock.json` for the exact dependency resolution.
 

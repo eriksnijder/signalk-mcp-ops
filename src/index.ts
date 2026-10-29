@@ -3,11 +3,13 @@ import { PLUGIN_VERSION } from './version.js'
 import express, { type RequestHandler } from 'express'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createServer } from './tools.js'
+import { AccessError, createAccess, requireSecurity, type ReadAccess } from './auth.js'
 import { settingsSchema, tokenMatches, type Settings } from './safety.js'
 
 function pluginFactory(app: ServerAPI): Plugin {
   let settings: Settings | undefined
   let token = ''
+  let permissionRouter: boolean | undefined
   const active = new Set<ReturnType<typeof createServer>>()
   const jsonParser = express.json({ limit: '64kb' })
   const parseJson: RequestHandler = (req, res, next) => {
@@ -19,12 +21,21 @@ function pluginFactory(app: ServerAPI): Plugin {
   }
   const guard: RequestHandler = (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store')
-    if (!settings) { res.status(503).json({ error: 'PLUGIN_DISABLED' }); return }
+    if (!settings || permissionRouter !== true) { res.status(503).json({ error: 'PLUGIN_DISABLED' }); return }
     if (!settings.allowedHosts.includes(req.headers.host ?? '') ||
       (req.headers.origin !== undefined && !settings.allowedOrigins.includes(req.headers.origin))) {
       res.status(403).json({ error: 'FORBIDDEN_ORIGIN_OR_HOST' }); return
     }
     if (!tokenMatches(req.get('X-MCP-Ops-Key'), token)) { res.status(401).json({ error: 'UNAUTHORIZED' }); return }
+    const current = settings
+    try {
+      res.locals.mcpAccess = createAccess(app, req.get('authorization'), () => settings === current)
+    } catch (error) {
+      const status = error instanceof AccessError ? error.status : 503
+      if (status === 401) res.setHeader('WWW-Authenticate', 'Bearer realm="Signal K MCP Operations"')
+      res.status(status).json({ error: error instanceof AccessError ? error.code : 'SIGNALK_SECURITY_UNAVAILABLE' })
+      return
+    }
     next()
   }
   return {
@@ -44,6 +55,14 @@ function pluginFactory(app: ServerAPI): Plugin {
         app.setPluginError('MCP disabled: valid settings and SIGNALK_MCP_OPS_KEY (32-512 characters) required')
         return
       }
+      try {
+        // Native startup may invoke start() before registering the router.
+        if (permissionRouter === false) throw new AccessError('PERMISSION_ROUTER_UNAVAILABLE', 503)
+        requireSecurity(app)
+      } catch {
+        app.setPluginError('MCP disabled: native Signal K security and permission-aware plugin routing are required')
+        return
+      }
       settings = parsed.data; token = secret
       app.setPluginStatus('Read-only MCP ready')
     },
@@ -53,11 +72,18 @@ function pluginFactory(app: ServerAPI): Plugin {
       active.clear()
     },
     registerWithRouter(router) {
-      router.post('/mcp', guard, parseJson, async (req, res) => {
+      // No fallback to an unclassified/public route. Unsupported hosts stay disabled.
+      permissionRouter = typeof router.access === 'function'
+      if (!permissionRouter) {
+        settings = undefined; token = ''
+        app.setPluginError('MCP disabled: permission-aware Signal K plugin routing is required')
+      }
+      const routes = permissionRouter ? router.access('readonly') : router
+      routes.post('/mcp', guard, parseJson, async (req, res) => {
         if (!settings) { res.sendStatus(503); return }
         if (active.size >= 8) { res.status(429).json({ error: 'BUSY' }); return }
         if (Buffer.byteLength(JSON.stringify(req.body) ?? '') > 65536) { res.sendStatus(413); return }
-        const server = createServer(app, settings)
+        const server = createServer(app, settings, res.locals.mcpAccess as ReadAccess)
         const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })
         active.add(server)
         let cleaned = false
@@ -74,14 +100,14 @@ function pluginFactory(app: ServerAPI): Plugin {
         finally { await cleanup() }
       })
       const unsupported: RequestHandler = (_req, res) => { res.setHeader('Allow', 'POST'); res.sendStatus(405) }
-      router.get('/mcp', guard, unsupported)
-      router.delete('/mcp', guard, unsupported)
+      routes.get('/mcp', guard, unsupported)
+      routes.delete('/mcp', guard, unsupported)
     },
     getOpenApi: () => ({ openapi: '3.0.3', info: { title: 'Signal K MCP Operations', version: PLUGIN_VERSION },
       servers: [{ url: '/plugins/signalk-mcp-ops' }], paths: { '/mcp': { post: {
-        summary: 'MCP JSON-RPC over stateless Streamable HTTP', security: [{ mcpOpsKey: [] }],
+        summary: 'Read-only MCP with native Signal K identity and path/source permissions', security: [{ signalKBearer: [], mcpOpsKey: [] }],
         responses: { '200': { description: 'MCP response' }, '202': { description: 'Notification accepted' }, '401': { description: 'Authentication required' } }
-      } } }, components: { securitySchemes: { mcpOpsKey: { type: 'apiKey', in: 'header', name: 'X-MCP-Ops-Key' } } } })
+      } } }, components: { securitySchemes: { signalKBearer: { type: 'http', scheme: 'bearer' }, mcpOpsKey: { type: 'apiKey', in: 'header', name: 'X-MCP-Ops-Key' } } } })
   }
 }
 export = pluginFactory

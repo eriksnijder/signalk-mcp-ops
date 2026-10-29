@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Allow dedicated Signal K read-only/read-write users and devices to access read-only MCP telemetry using their existing bearer tokens, while retaining the additional MCP key and Host/Origin policies.
+- Enforce native self-context path/source read permissions on values, path discovery and source identifiers, including for administrators. Fail closed when native security or permission-aware routing is unavailable; guest/cookie/query-only authentication is not accepted.
+- Keep connection and plugin inventories/status admin-only. Omit provider context for non-admin diagnoses, and make missing/denied paths indistinguishable when source permission cannot be established.
+- Revalidate identities on tool calls and after asynchronous inventory reads. Add native Signal K 2.31.0/2.35.1 authentication/ACL integration tests and a Node 22/24 CI matrix.
+
 ## 1.0.1
 
 - Remove the duplicate HTML logo from the README: Signal K renders it as text and already displays the app icon in its header. Start directly with the example questions.

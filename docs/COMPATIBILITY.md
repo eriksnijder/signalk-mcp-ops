@@ -2,6 +2,10 @@
 
 The package's Node.js requirement is **22 or newer**. Automated tests cover Node 22 and 24. Compile-time Signal K API types are 2.33.0; they do not establish a supported server-version range. The candidate uses MCP SDK 1.32.2 and Zod 4.6.7; exact dependencies are recorded in package-lock.json.
 
+## Unreleased native read-only user support
+
+The development build adds native bearer identity and self-context path/source permission checks, including discovery and alternate source identifiers. It requires enabled native security and permission-aware routing; connection/status/plugin inventories remain admin-only. See [behavior, compatibility and reproduction](READ-ONLY-USERS.md). Published 1.0.1 and historical acceptance evidence below retain their previous admin-only model. New-feature tests do not establish a boat deployment or a published release.
+
 ## Published release: 1.0.0
 
 At preparation on 2026-10-28, the 1.0 package was unpublished. Live acceptance below was performed on 1.0.0-rc.1. Final versioned package checks, exact commit/CI links and artifact hashes are recorded with the release artifact and the [release PR](https://github.com/eriksnijder/signalk-mcp-ops/pull/5). Do not present candidate evidence as a live installation of the final tarball.

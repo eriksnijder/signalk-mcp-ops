@@ -18,7 +18,7 @@ function npm(args, cwd) {
 async function main() {
   const [packed] = JSON.parse(npm(['pack', '--ignore-scripts', '--json', '--pack-destination', temp], root))
   const paths = packed.files.map(file => file.path)
-  assert.ok(paths.includes('dist/index.js') && paths.includes('dist/internal/signalK231Adapter.js'))
+  assert.ok(paths.includes('dist/index.js') && paths.includes('dist/auth.js') && paths.includes('dist/internal/signalK231Adapter.js'))
   assert.ok(paths.every(file => /^(dist\/|docs\/|icon\.png$|(?:README|SPEC|ARCHITECTURE|SECURITY|CONTRIBUTING|CHANGELOG)\.md$|LICENSE$|package\.json$)/.test(file)))
   assert.ok(!paths.some(file => /(?:^|\/)(?:\.env|node_modules|test|src)(?:[./]|$)|\.(?:pem|key|log)$/.test(file)))
   fs.writeFileSync(path.join(temp, 'package.json'), JSON.stringify({ name: 'package-consumer-check', private: true }))
@@ -37,8 +37,22 @@ async function main() {
   const { Client } = installed('@modelcontextprotocol/sdk/client/index.js')
   const { StreamableHTTPClientTransport } = installed('@modelcontextprotocol/sdk/client/streamableHttp.js')
   const factory = installed('signalk-mcp-ops')
+  const token = 'synthetic-package-admin'
+  const readerToken = 'synthetic-package-reader'
+  const securityStrategy = {
+    isDummy: () => false, anyACLs: () => false, checkACL: () => true,
+    authorizeWS(connection) {
+      const bearer = connection.headers.authorization
+      if (![token, readerToken].some(value => bearer === `Bearer ${value}`)) throw Error('invalid fixture token')
+      connection.skIsAuthenticated = true
+      connection.skPrincipal = bearer === `Bearer ${token}`
+        ? { identifier: 'package-admin', permissions: 'admin' }
+        : { identifier: 'package-reader', permissions: 'readonly' }
+    }
+  }
   const app = express(), router = express.Router()
-  const plugin = factory({ getSelfPath: () => ({ value: 3 }), getFeatures: async () => ({ plugins: [] }), setPluginStatus() {}, setPluginError() {} })
+  router.access = () => router
+  const plugin = factory({ securityStrategy, getSelfPath: () => ({ value: 3 }), getFeatures: async () => ({ plugins: [] }), setPluginStatus() {}, setPluginError() {} })
   plugin.registerWithRouter(router)
   app.use('/plugins/signalk-mcp-ops', router)
   const listener = app.listen(0, '127.0.0.1')
@@ -49,17 +63,23 @@ async function main() {
   const host = `127.0.0.1:${listener.address().port}`
   const url = new URL(`http://${host}/plugins/signalk-mcp-ops/mcp`)
   const client = new Client({ name: 'package-check', version: '1' })
+  const reader = new Client({ name: 'package-reader-check', version: '1' })
   try {
     plugin.start({ allowedHosts: [host] })
     assert.equal((await fetch(url, { method: 'POST' })).status, 401)
-    await client.connect(new StreamableHTTPClientTransport(url, { requestInit: { headers: { 'X-MCP-Ops-Key': key } } }))
+    assert.equal((await fetch(url, { method: 'POST', headers: { 'X-MCP-Ops-Key': key } })).status, 401)
+    await client.connect(new StreamableHTTPClientTransport(url, { requestInit: { headers: { 'X-MCP-Ops-Key': key, Authorization: `Bearer ${token}` } } }))
     assert.equal(client.getServerVersion().version, pkg.version)
     assert.equal((await client.listTools()).tools.length, 9)
     assert.equal((await client.callTool({ name: 'get_server_info', arguments: {} })).structuredContent.data.pluginVersion, pkg.version)
     assert.equal((await client.callTool({ name: 'read_path', arguments: { path: 'navigation.speedOverGround' } })).structuredContent.data.value, 3)
     assert.equal(plugin.getOpenApi().info.version, pkg.version)
-    console.log(`Verified ${packed.filename}: ${packed.entryCount} files; clean consumer install; authenticated MCP handshake and 9 tools.`)
+    await reader.connect(new StreamableHTTPClientTransport(url, { requestInit: { headers: { 'X-MCP-Ops-Key': key, Authorization: `Bearer ${readerToken}` } } }))
+    assert.equal((await reader.callTool({ name: 'read_path', arguments: { path: 'navigation.speedOverGround' } })).structuredContent.data.value, 3)
+    assert.equal((await reader.callTool({ name: 'list_plugins', arguments: {} })).structuredContent.error.code, 'ADMIN_REQUIRED')
+    console.log(`Verified ${packed.filename}: ${packed.entryCount} files; clean consumer install; admin/read-only MCP handshakes, 9 tools and admin gate.`)
   } finally {
+    await reader.close()
     await client.close()
     await plugin.stop()
     listener.closeAllConnections()
