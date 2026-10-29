@@ -2,7 +2,7 @@
 
 The package's Node.js requirement is **22 or newer**. Automated tests cover Node 22 and 24. Compile-time Signal K API types are 2.33.0; they do not establish a supported server-version range. The candidate uses MCP SDK 1.32.2 and Zod 4.6.7; exact dependencies are recorded in package-lock.json.
 
-## Prepared release: 1.0.0
+## Published release: 1.0.0
 
 At preparation on 2026-10-28, the 1.0 package was unpublished. Live acceptance below was performed on 1.0.0-rc.1. Final versioned package checks, exact commit/CI links and artifact hashes are recorded with the release artifact and the [release PR](https://github.com/eriksnijder/signalk-mcp-ops/pull/5). Do not present candidate evidence as a live installation of the final tarball.
 
@@ -39,6 +39,12 @@ These are operator-reported results for v0.1.0, not a new live run of the candid
 Provider diagnostics use runtime shape detection based on Signal K **2.31.0**. Unsupported internal shapes return `UNSUPPORTED`; oversized inputs return `RESULT_TOO_LARGE`. An unavailable provider context does not prevent the existing path freshness/missing-data diagnosis.
 
 The original reference is tag [v2.31.0](https://github.com/SignalK/signalk-server/tree/v2.31.0), commit `5a3c945ca3f8a0427302ca37a4ae476ee2276adc`. [ARCHITECTURE.md](../ARCHITECTURE.md#internal-provider-diagnostics-reference) records the source contracts. Do not infer compatibility with every Signal K version from a package version or a successful runtime shape check.
+
+## Registry indicators checked on 2026-10-29
+
+The [version-specific registry record](https://signalk.org/signalk-plugin-registry/plugins/signalk-mcp-ops.json) reports score 85 and zero high/moderate/critical findings for 1.0.0, tested at 07:44 UTC on Signal K 2.35.1 / Node 24. The old 0.1.0 scan reports score 75 and two high findings. A reference server displayed the old warning alongside its installed 1.0.0 metadata until its App Store cache was refreshed; the subsequent detail response reported score 85 and audit OK. No dependency overrides or audit suppression were used. A full repository audit on that date also reported zero findings.
+
+The 1.0.1 patch changes README/documentation and package version only. It removes the raw HTML image line; the Signal K appIcon metadata and PNG remain unchanged.
 
 ## Log access
 
