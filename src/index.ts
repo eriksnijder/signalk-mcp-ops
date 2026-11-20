@@ -44,7 +44,7 @@ function pluginFactory(app: ServerAPI): Plugin {
     schema: { type: 'object', required: ['allowedHosts'], properties: {
       allowedHosts: { type: 'array', minItems: 1, items: { type: 'string' }, title: 'Exact Host headers including port' },
       allowedOrigins: { type: 'array', items: { type: 'string' }, default: [] },
-      pathPrefixes: { type: 'array', minItems: 1, items: { type: 'string' }, default: ['navigation', 'environment', 'electrical', 'propulsion', 'tanks'] },
+      pathPrefixes: { type: 'array', minItems: 1, items: { type: 'string' }, default: ['navigation', 'environment', 'electrical', 'propulsion', 'tanks', 'notifications'] },
       staleAfterSeconds: { type: 'integer', minimum: 1, maximum: 86400, default: 300 }
     } },
     start(options) {

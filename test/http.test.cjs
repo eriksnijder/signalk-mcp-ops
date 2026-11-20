@@ -39,10 +39,10 @@ test('real MCP client handshake, tools, isolation, rejection and lifecycle', asy
   assert.equal(client.getServerVersion().version, require('../package.json').version)
   assert.equal(plugin.getOpenApi().info.version, require('../package.json').version)
   const tools = await client.listTools()
-  assert.equal(tools.tools.length, 9)
+  assert.equal(tools.tools.length, 14)
   assert.deepEqual(tools.tools.map(tool => tool.name).sort(), [
-    'diagnose_missing_path', 'get_connection_status', 'get_security_status', 'get_server_info',
-    'inspect_path_sources', 'list_connections', 'list_paths', 'list_plugins', 'read_path'
+    'diagnose_missing_path', 'get_connection_status', 'get_security_status', 'get_server_info', 'get_usage_guide', 'get_vessel_overview',
+    'inspect_path_sources', 'list_alarms', 'list_connections', 'list_paths', 'list_plugins', 'read_path', 'read_paths', 'search_paths'
   ])
   assert.ok(tools.tools.every(t => t.annotations.readOnlyHint && !t.annotations.destructiveHint))
   const call = (name, args = {}) => client.callTool({ name, arguments: args })

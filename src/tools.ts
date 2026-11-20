@@ -4,10 +4,11 @@ import { z } from 'zod'
 import { SignalK231Adapter } from './internal/signalK231Adapter.js'
 import { SignalKAdapter, type ReadAPI } from './adapter.js'
 import type { ReadAccess } from './auth.js'
+import { SERVER_INSTRUCTIONS, USAGE_GUIDE } from './guide.js'
 import { DiagnosticError, pathSchema, safeCopy, type Settings } from './safety.js'
 
 export function createServer(app: ReadAPI, settings: Settings, access: ReadAccess) {
-  const server = new McpServer({ name: 'signalk-mcp-ops', version: PLUGIN_VERSION })
+  const server = new McpServer({ name: 'signalk-mcp-ops', version: PLUGIN_VERSION }, { instructions: SERVER_INSTRUCTIONS })
   const adapter = new SignalKAdapter(app, settings, access)
   const providers = new SignalK231Adapter(app)
   const adminUnavailable = () => ({ available: false, error: { code: 'ADMIN_REQUIRED' } })
@@ -57,6 +58,21 @@ export function createServer(app: ReadAPI, settings: Settings, access: ReadAcces
       if (e instanceof DiagnosticError && e.code === 'PATH_UNAVAILABLE') return { state: 'unavailable', suggestion: 'The path is absent or native path/source permission could not be established.' }
       throw e
     }
+  })
+  register('get_vessel_overview', 'One-call vessel summary: navigation, wind/depth/temperature, batteries, tanks, engines and active alarms. Includes native values plus display conversions; unreadable items are omitted.', {}, () => adapter.overview())
+  register('search_paths', 'Find authorized value paths by words matched against path segments and meta display names/descriptions, e.g. "battery voltage".', {
+    query: z.string().min(1).max(100), prefix: pathSchema.optional(), limit: z.number().int().min(1).max(50).default(20)
+  }, a => adapter.search(a.query, a.prefix, a.limit))
+  register('read_paths', 'Read up to 25 allowed self-context values in one call. Each entry succeeds or fails independently. convertUnits adds a display value (kn, degrees, Celsius, %, L, rpm).', {
+    paths: z.array(pathSchema).min(1).max(25), convertUnits: z.boolean().default(false)
+  }, a => adapter.readMany([...new Set<string>(a.paths)], a.convertUnits))
+  register('list_alarms', 'List Signal K notifications, most severe first. Normal/nominal states are omitted unless includeNormal is true. Requires the notifications prefix.', {
+    includeNormal: z.boolean().default(false), limit: z.number().int().min(1).max(100).default(50)
+  }, a => adapter.alarms(a.includeNormal, a.limit))
+  register('get_usage_guide', 'Guidance for interpreting Signal K data: workflow, SI units, freshness, angle references, error codes and safety limits.', {}, () => ({ guide: USAGE_GUIDE }))
+  server.registerResource('usage-guide', 'signalk-mcp-ops://guide', { title: 'Signal K MCP usage guide', mimeType: 'text/markdown' }, uri => {
+    access.check()
+    return { contents: [{ uri: uri.href, mimeType: 'text/markdown', text: USAGE_GUIDE }] }
   })
   register('get_security_status', 'Report MCP policy and verified native security availability; no credentials.', {}, () => ({
     pluginKeyRequired: true, hostPolicy: 'exact-allowlist', originPolicy: 'exact-allowlist-or-absent',

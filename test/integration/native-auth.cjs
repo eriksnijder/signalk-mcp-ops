@@ -106,7 +106,7 @@ test('native Signal K router, JWT identities and source/path ACLs enforce read-o
   const other = await clientFor(token('other'))
   const writer = await clientFor(token('writer'))
   const device = await clientFor(jwt.sign({ device: 'reader-device' }, securityConfig.secretKey, { expiresIn: '1h' }))
-  assert.equal((await reader.client.listTools()).tools.length, 9)
+  assert.equal((await reader.client.listTools()).tools.length, 14)
   assert.equal((await reader.call('read_path', { path: 'navigation.allowed' })).data.value, 3)
   assert.equal((await writer.call('read_path', { path: 'navigation.allowed' })).data.value, 3)
   assert.equal((await device.call('read_path', { path: 'navigation.allowed' })).data.value, 3)
