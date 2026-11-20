@@ -86,7 +86,7 @@ Use your deployment's incoming Host header, including its port, in `allowedHosts
 
 The Admin UI enabled switch does not by itself confirm successful startup. The ready status is **Read-only MCP ready**. HTTP 503 with `PLUGIN_DISABLED` means startup has not completed successfully or the plugin is stopped. Check the saved settings and that `SIGNALK_MCP_OPS_KEY` is present in the running Signal K process environment with 32–512 characters. Invalid settings, including a blank `allowedOrigins` entry, also prevent startup. A key file alone is insufficient unless the service loads it. After changing the service environment, restart Signal K.
 
-HTTP 401 means the admin token or MCP key was rejected; HTTP 403 can indicate insufficient admin permissions or the Host/Origin policy. Do not rotate credentials merely because the plugin returned HTTP 503.
+HTTP 401 means the Signal K bearer token or MCP key was rejected; HTTP 403 can indicate insufficient permission or the Host/Origin policy. HTTP 503 also occurs when native security or permission-aware routing is unavailable. Do not rotate credentials merely because the plugin returned HTTP 503.
 
 ## MCP client authentication
 
@@ -98,7 +98,25 @@ Authorization: Bearer <Signal K token>
 X-MCP-Ops-Key: <MCP Ops key>
 ```
 
-The route intentionally retains **Signal K admin authentication**. Enable Signal K security and use an authorized admin token; the extra MCP key does not replace it. Clients must support both headers. The plugin key check remains enforced even if host security is disabled, but disabling host security is not the documented deployment configuration.
+In the development build, the route accepts **authenticated Signal K read-only, read-write and admin identities**. Telemetry is checked against native path/source read permissions, even for admins. Connection inventory/status and plugin inventory remain admin-only. Both headers are required. Signal K security must be enabled; missing or unknown native security hooks disable the endpoint. Published 1.0.1 still requires an admin token.
 
 Use the existing Signal K HTTPS endpoint for remote clients. This version provides no OAuth discovery or OAuth authorization server; clients requiring that flow are unsupported. See [SECURITY.md](../SECURITY.md) for the existing trust model and deployment limits.
+
+## Dedicated read-only user (development build)
+
+This setup requires the unreleased read-only-user feature; installing published 1.0.1 does not enable it. Existing admin-token clients require no credential or settings migration.
+
+1. In Signal K Admin UI, enable security and create a dedicated user such as `mcp-reader` with **Read Only** permission. Do not grant admin or write permissions for telemetry access.
+2. Configure Signal K's native ACLs if this user should see only particular paths or sources. With no ACLs configured, native Signal K policy permits reads; the plugin's configured path prefixes still apply. Follow native rule ordering rather than treating the plugin key as a user permission.
+3. On the Signal K server, as the account running Signal K, generate a bounded-lifetime token using its standard utility:
+
+   ```sh
+   signalk-generate-token -u mcp-reader -e 30d -s ~/.signalk/security.json
+   ```
+
+   Adjust the configuration path if necessary. Store the printed token privately in the MCP client's secret storage; never paste it into chat, logs, screenshots or source control.
+4. Replace only the client's `Authorization: Bearer ...` token. Keep the endpoint, MCP key, allowed Host/Origin and configured path prefixes.
+5. Test an allowed path, a denied path/source and `list_paths`. Denied or unverifiable readings return `PATH_UNAVAILABLE`; discovery omits them. `list_connections`, `get_connection_status` and `list_plugins` should return `ADMIN_REQUIRED` for this user. Diagnosis still checks telemetry, while provider context is withheld.
+
+Removing the Signal K user/device revokes its token; ACL and role changes are applied on later calls. Cookie-only and query-token connections are rejected. The plugin does not create tokens, read signing keys, change ACLs or approve users. See [permission behavior and compatibility](READ-ONLY-USERS.md).
 

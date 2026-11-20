@@ -22,11 +22,13 @@ The plugin cannot change settings, restart services or control the boat. It is a
 
 ```text
 Endpoint: https://<your-server>/plugins/signalk-mcp-ops/mcp
-Authorization: Bearer <Signal K admin token>
+Authorization: Bearer <Signal K user or device token>
 X-MCP-Ops-Key: <your MCP key>
 ```
 
 Use HTTPS and keep Signal K security enabled. The plugin uses the server's existing connection; no extra port is needed. Clients that require OAuth discovery are not currently supported.
+
+**In development:** dedicated read-only Signal K users can read telemetry under native path/source permissions, intersected with the plugin's configured path prefixes. Connection inventory/status and plugin inventory remain admin-only; read-only diagnoses omit provider context. Existing admin clients and the second MCP key remain supported. See [read-only user setup](docs/INSTALLATION.md#dedicated-read-only-user-development-build) and [permission details](docs/READ-ONLY-USERS.md). This feature is not included in published 1.0.1.
 
 ## Version and compatibility
 

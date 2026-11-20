@@ -1,3 +1,4 @@
+const { adminAccess } = require('./auth-fixture.cjs')
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const { SignalK231Adapter } = require('../dist/internal/signalK231Adapter.js')
@@ -64,7 +65,7 @@ test('MCP outputs exclude configuration and secrets; diagnoses preserve states a
   const f = fixture()
   f.getSelfPath = path => path.endsWith('missing') ? undefined : { value: 1, $source: 'input.II', values: { 'input.II': {} }, ...(path.endsWith('fresh') ? { timestamp: new Date().toISOString() } : path.endsWith('stale') ? { timestamp: '2020-01-01T00:00:00Z' } : {}) }
   f.getFeatures = async () => ({ plugins: [] })
-  const server = createServer(f, settingsSchema.parse({ allowedHosts: ['localhost'] }))
+  const server = createServer(f, settingsSchema.parse({ allowedHosts: ['localhost'] }), adminAccess())
   const client = new Client({ name: 'provider-test', version: '1' })
   const [a,b] = InMemoryTransport.createLinkedPair(); await server.connect(a); await client.connect(b)
   t.after(async () => { await client.close(); await server.close() })

@@ -1,3 +1,4 @@
+const { securityStrategy, token, permitRouter } = require('./auth-fixture.cjs')
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const express = require('express')
@@ -10,8 +11,8 @@ test('real MCP client handshake, tools, isolation, rejection and lifecycle', asy
   const key = 'test-only-'.repeat(5)
   process.env.SIGNALK_MCP_OPS_KEY = key
   t.after(() => { if (previous === undefined) delete process.env.SIGNALK_MCP_OPS_KEY; else process.env.SIGNALK_MCP_OPS_KEY = previous })
-  const app = express(); const router = express.Router()
-  const plugin = factory({ getSelfPath: p => p === 'navigation.speedOverGround' ? { value: 3 } : undefined,
+  const app = express(); const router = permitRouter(express.Router())
+  const plugin = factory({ securityStrategy, getSelfPath: p => p === 'navigation.speedOverGround' ? { value: 3 } : undefined,
     getFeatures: async () => ({ plugins: [{ id: 'sample', name: 'Sample Plugin', enabled: true, version: '1' }] }), setPluginStatus() {}, setPluginError() {} })
   plugin.registerWithRouter(router); app.use('/plugins/signalk-mcp-ops', router)
   const listener = app.listen(0, '127.0.0.1'); await new Promise(resolve => listener.once('listening', resolve))
@@ -22,16 +23,18 @@ test('real MCP client handshake, tools, isolation, rejection and lifecycle', asy
   assert.equal((await post()).status, 503)
   plugin.start({ allowedHosts: [host] })
   assert.equal((await post()).status, 401)
+  assert.equal((await post({ 'X-MCP-Ops-Key': key })).status, 401)
+  assert.equal((await post({ 'X-MCP-Ops-Key': key, Authorization: 'Bearer invalid' })).status, 401)
   assert.equal((await post({ 'X-MCP-Ops-Key': 'wrong' })).status, 401)
-  assert.equal((await post({ 'X-MCP-Ops-Key': key, Origin: 'https://evil.test' })).status, 403)
+  assert.equal((await post({ 'X-MCP-Ops-Key': key, Authorization: `Bearer ${token}`, Origin: 'https://evil.test' })).status, 403)
   const rejectedHost = await new Promise((resolve, reject) => {
-    const req = require('node:http').request(url, { method: 'POST', headers: { Host: 'evil.test', 'X-MCP-Ops-Key': key } }, res => { res.resume(); resolve(res.statusCode) })
+    const req = require('node:http').request(url, { method: 'POST', headers: { Host: 'evil.test', 'X-MCP-Ops-Key': key, Authorization: `Bearer ${token}` } }, res => { res.resume(); resolve(res.statusCode) })
     req.on('error', reject); req.end()
   })
   assert.equal(rejectedHost, 403)
-  assert.equal((await fetch(url, { headers: { 'X-MCP-Ops-Key': key } })).status, 405)
+  assert.equal((await fetch(url, { headers: { 'X-MCP-Ops-Key': key, Authorization: `Bearer ${token}` } })).status, 405)
   const client = new Client({ name: 'test', version: '1' })
-  await client.connect(new StreamableHTTPClientTransport(url, { requestInit: { headers: { 'X-MCP-Ops-Key': key } } }))
+  await client.connect(new StreamableHTTPClientTransport(url, { requestInit: { headers: { 'X-MCP-Ops-Key': key, Authorization: `Bearer ${token}` } } }))
   t.after(() => client.close())
   assert.equal(client.getServerVersion().version, require('../package.json').version)
   assert.equal(plugin.getOpenApi().info.version, require('../package.json').version)
@@ -56,12 +59,42 @@ test('real MCP client handshake, tools, isolation, rejection and lifecycle', asy
   assert.equal((await call('read_path', { path: '../config' })).isError, true)
   assert.equal((await call('restart_server')).isError, true)
   await plugin.stop()
-  assert.equal((await post({ 'X-MCP-Ops-Key': key })).status, 503)
+  assert.equal((await post({ 'X-MCP-Ops-Key': key, Authorization: `Bearer ${token}` })).status, 503)
   plugin.start({ allowedHosts: [host] })
   assert.equal((await call('get_server_info')).structuredContent.data.readOnly, true)
   plugin.start({ allowedHosts: [] })
-  assert.equal((await post({ 'X-MCP-Ops-Key': key })).status, 503)
+  assert.equal((await post({ 'X-MCP-Ops-Key': key, Authorization: `Bearer ${token}` })).status, 503)
   delete process.env.SIGNALK_MCP_OPS_KEY
   plugin.start({ allowedHosts: [host] })
-  assert.equal((await post({ 'X-MCP-Ops-Key': key })).status, 503)
+  assert.equal((await post({ 'X-MCP-Ops-Key': key, Authorization: `Bearer ${token}` })).status, 503)
+})
+
+test('missing native security or permission-aware routing leaves admission disabled', async t => {
+  const previous = process.env.SIGNALK_MCP_OPS_KEY
+  const key = 'synthetic-unsupported-host-'.repeat(3)
+  process.env.SIGNALK_MCP_OPS_KEY = key
+  t.after(() => { if (previous === undefined) delete process.env.SIGNALK_MCP_OPS_KEY; else process.env.SIGNALK_MCP_OPS_KEY = previous })
+  for (const options of [
+    { securityStrategy: undefined, permissionRouter: true },
+    { securityStrategy: { ...securityStrategy, isDummy: () => true }, permissionRouter: true },
+    { securityStrategy, permissionRouter: false }
+  ]) {
+    const app = express(), router = express.Router(), errors = []
+    if (options.permissionRouter) permitRouter(router)
+    const plugin = factory({ securityStrategy: options.securityStrategy, setPluginStatus() {}, setPluginError(error) { errors.push(error) } })
+    plugin.registerWithRouter(router); app.use('/plugins/signalk-mcp-ops', router)
+    const listener = app.listen(0, '127.0.0.1')
+    await new Promise(resolve => listener.once('listening', resolve))
+    const host = `127.0.0.1:${listener.address().port}`
+    try {
+      plugin.start({ allowedHosts: [host] })
+      const response = await fetch(`http://${host}/plugins/signalk-mcp-ops/mcp`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'X-MCP-Ops-Key': key } })
+      assert.equal(response.status, 503)
+      assert.deepEqual(await response.json(), { error: 'PLUGIN_DISABLED' })
+      assert.ok(errors.length)
+    } finally {
+      await plugin.stop(); listener.closeAllConnections()
+      await new Promise(resolve => listener.close(resolve))
+    }
+  }
 })

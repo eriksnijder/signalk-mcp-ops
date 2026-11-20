@@ -1,3 +1,4 @@
+const { adminAccess } = require('./auth-fixture.cjs')
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const { Client } = require('@modelcontextprotocol/sdk/client/index.js')
@@ -6,7 +7,7 @@ const { createServer } = require('../dist/tools.js')
 const { settingsSchema } = require('../dist/safety.js')
 
 test('host exceptions never expose credentials and oversized telemetry fails safely', async t => {
-  const server = createServer({ getSelfPath: () => ({ value: 'x'.repeat(40000) }), getFeatures: () => { throw new Error('password=do-not-return-this') } }, settingsSchema.parse({ allowedHosts: ['localhost'] }))
+  const server = createServer({ getSelfPath: () => ({ value: 'x'.repeat(40000) }), getFeatures: () => { throw new Error('password=do-not-return-this') } }, settingsSchema.parse({ allowedHosts: ['localhost'] }), adminAccess())
   const client = new Client({ name: 'error-test', version: '1' })
   const [left, right] = InMemoryTransport.createLinkedPair()
   await server.connect(left); await client.connect(right)
