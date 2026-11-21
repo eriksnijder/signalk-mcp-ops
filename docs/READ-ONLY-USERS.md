@@ -1,6 +1,6 @@
-# Native read-only user support (unreleased)
+# Native read-only user support
 
-Published 1.0.1 requires an admin token. This development change accepts existing Signal K user/device bearer tokens for `readonly`, `readwrite` and `admin` identities. It exposes no writes for any role. The endpoint, settings, extra MCP key and Host/Origin rules are unchanged.
+Version 1.0.x requires an admin token. From version 1.1.0, the plugin accepts existing Signal K user/device bearer tokens for `readonly`, `readwrite` and `admin` identities. It exposes no writes for any role. The endpoint, settings, extra MCP key and Host/Origin rules are unchanged.
 
 ## Access policy
 

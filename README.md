@@ -6,7 +6,7 @@ This Signal K plugin lets an AI assistant (such as ChatGPT/Codex or Claude) read
 
 It **only reads**. It cannot switch anything, change settings, steer the boat or restart your server.
 
-> **Release status.** Published version **1.0.1** has the diagnostic tools (reading values, finding paths, checking data sources and connections) and needs an admin token. The vessel overview, search, batch reading, alarms, usage guide and read-only user support are on `main` and will be in the **next release**. Each feature below is marked with the version it needs.
+> **Version 1.1.0** adds the vessel overview, search, batch reading, alarms, the usage guide and read-only user logins. Features marked **1.1** need version 1.1.0 or newer. If you have 1.0, update the plugin under **Appstore → Updates** in the Signal K Admin UI.
 
 ---
 
@@ -17,27 +17,27 @@ You don't need to know Signal K path names. Ask the way you would ask a crew mem
 ### Quick checks
 | You ask | What the assistant does | Needs |
 | --- | --- | --- |
-| *"How is the boat doing?"* | Gets one overview: position, speed, heading, wind, depth, batteries, tanks, engines and active alarms. | next release |
-| *"Are there any alarms?"* | Lists active Signal K notifications (anchor, depth, battery and others), most serious first. | next release |
-| *"What's the house battery voltage and state of charge?"* | Searches for battery data and reads several values at once. | next release |
-| *"How much fresh water and diesel do we have left?"* | Reads tank levels and capacities and converts them to % and litres. | next release |
+| *"How is the boat doing?"* | Gets one overview: position, speed, heading, wind, depth, batteries, tanks, engines and active alarms. | 1.1 |
+| *"Are there any alarms?"* | Lists active Signal K notifications (anchor, depth, battery and others), most serious first. | 1.1 |
+| *"What's the house battery voltage and state of charge?"* | Searches for battery data and reads several values at once. | 1.1 |
+| *"How much fresh water and diesel do we have left?"* | Reads tank levels and capacities and converts them to % and litres. | 1.1 |
 
 ### Underway or at anchor
 | You ask | What the assistant does | Needs |
 | --- | --- | --- |
-| *"What's our speed and course?"* | Reads speed over ground (knots) and course (degrees). | next release |
-| *"How much water is under the keel?"* | Reads the depth sensors and explains below-transducer, below-keel and below-surface. | next release |
-| *"What is the true wind doing?"* | Reads wind speed and direction and explains apparent versus true wind. | next release |
-| *"How warm is the engine, and how many hours does it have?"* | Reads engine temperature (°C), revolutions (rpm) and run time. | next release |
+| *"What's our speed and course?"* | Reads speed over ground (knots) and course (degrees). | 1.1 |
+| *"How much water is under the keel?"* | Reads the depth sensors and explains below-transducer, below-keel and below-surface. | 1.1 |
+| *"What is the true wind doing?"* | Reads wind speed and direction and explains apparent versus true wind. | 1.1 |
+| *"How warm is the engine, and how many hours does it have?"* | Reads engine temperature (°C), revolutions (rpm) and run time. | 1.1 |
 
 ### When something looks wrong
 | You ask | What the assistant does | Needs |
 | --- | --- | --- |
-| *"Why has my wind data disappeared?"* | Checks whether the value exists, when it last updated, and whether a data connection reports errors. | 1.0.1 |
-| *"Is this battery reading still fresh?"* | Reports the value, its timestamp and its age against your freshness limit (default 5 minutes). | 1.0.1 |
-| *"Where is my depth reading coming from?"* | Shows which source (for example an NMEA 2000 sensor) supplies the value and which other sources exist. | 1.0.1 |
-| *"Which data connections have a problem?"* | Lists your configured connections and which ones report errors (admin only). | 1.0.1 |
-| *"What data is available on this boat?"* | Lists the data paths you allowed it to read, and installed plugins (admin only). | 1.0.1 |
+| *"Why has my wind data disappeared?"* | Checks whether the value exists, when it last updated, and whether a data connection reports errors. | 1.0 |
+| *"Is this battery reading still fresh?"* | Reports the value, its timestamp and its age against your freshness limit (default 5 minutes). | 1.0 |
+| *"Where is my depth reading coming from?"* | Shows which source (for example an NMEA 2000 sensor) supplies the value and which other sources exist. | 1.0 |
+| *"Which data connections have a problem?"* | Lists your configured connections and which ones report errors (admin only). | 1.0 |
+| *"What data is available on this boat?"* | Lists the data paths you allowed it to read, and installed plugins (admin only). | 1.0 |
 
 ### Example conversation
 
@@ -136,8 +136,8 @@ Enable the plugin and click **Submit**. The plugin status should show **Read-onl
 ### 4. Create a login for the assistant
 Create a separate Signal K user just for the AI, so you can remove its access at any time:
 
-- **Next release:** in **Security → Users**, add a user such as `mcp-reader` with **Read Only** permission, then [generate a token](docs/INSTALLATION.md#dedicated-read-only-user-development-build) for it.
-- **Version 1.0.1:** an **admin** token is required. Connection and plugin checks always need admin, in every version.
+- In **Security → Users**, add a user such as `mcp-reader` with **Read Only** permission, then [generate a token](docs/INSTALLATION.md#dedicated-read-only-user) for it (version 1.1 or newer).
+- Version 1.0 needs an **admin** token. Connection and plugin checks always need admin, in every version.
 
 Keep the token as private as the MCP key.
 
@@ -221,18 +221,18 @@ The assistant chooses these itself; you don't have to name them.
 
 | Tool | In plain words | Needs |
 | --- | --- | --- |
-| `get_vessel_overview` | Snapshot of the whole boat | next release |
-| `search_paths` | Find data by everyday words | next release |
-| `read_paths` | Read up to 25 values at once, optionally in knots/°C/%/litres | next release |
-| `list_alarms` | Active alarms and warnings | next release |
-| `get_usage_guide` | Teaches the assistant Signal K units and safety rules | next release |
-| `read_path` | Read one value with its age and source | 1.0.1 |
-| `list_paths` | List the available data | 1.0.1 |
-| `inspect_path_sources` | Which devices supply a value | 1.0.1 |
-| `diagnose_missing_path` | Why a value is missing or old | 1.0.1 |
-| `get_server_info`, `get_security_status` | What the plugin can do and how it is protected | 1.0.1 |
-| `list_connections`, `get_connection_status` | Data connections and their errors (admin) | 1.0.1 |
-| `list_plugins` | Installed Signal K plugins (admin) | 1.0.1 |
+| `get_vessel_overview` | Snapshot of the whole boat | 1.1 |
+| `search_paths` | Find data by everyday words | 1.1 |
+| `read_paths` | Read up to 25 values at once, optionally in knots/°C/%/litres | 1.1 |
+| `list_alarms` | Active alarms and warnings | 1.1 |
+| `get_usage_guide` | Teaches the assistant Signal K units and safety rules | 1.1 |
+| `read_path` | Read one value with its age and source | 1.0 |
+| `list_paths` | List the available data | 1.0 |
+| `inspect_path_sources` | Which devices supply a value | 1.0 |
+| `diagnose_missing_path` | Why a value is missing or old | 1.0 |
+| `get_server_info`, `get_security_status` | What the plugin can do and how it is protected | 1.0 |
+| `list_connections`, `get_connection_status` | Data connections and their errors (admin) | 1.0 |
+| `list_plugins` | Installed Signal K plugins (admin) | 1.0 |
 
 Exact inputs, outputs and limits are in the [specification](SPEC.md).
 
@@ -240,7 +240,7 @@ Exact inputs, outputs and limits are in the [specification](SPEC.md).
 
 ## Version and compatibility
 
-**Published: 1.0.1.** Check [npm](https://www.npmjs.com/package/signalk-mcp-ops) or [GitHub releases](https://github.com/eriksnijder/signalk-mcp-ops/releases).
+**Current version: 1.1.0.** Check [npm](https://www.npmjs.com/package/signalk-mcp-ops) or [GitHub releases](https://github.com/eriksnijder/signalk-mcp-ops/releases).
 
 - **Automated tests:** Node.js 22 and 24; Signal K **2.31.0** and **2.35.1**.
 - **Tested on a live boat:** version 1.0 on Signal K **2.31.0 / OpenPlotter Raspberry Pi** with Codex desktop on Windows.

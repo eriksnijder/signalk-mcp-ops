@@ -21,7 +21,7 @@ flowchart TD
 
 `src/adapter.ts` reads the public Signal K data model. Its narrowed `ReadAPI` type exposes just `getSelfPath` and `getFeatures`. It projects plugin inventory fields (`id`, `name`, `version`, `enabled`) and traverses only allowed telemetry roots. It does not receive a caller-controlled URL, file path, executable or method name. Full config/log export adapters intentionally do not exist.
 
-`src/auth.ts` isolates the unreleased native authentication/ACL bridge. It requires enabled, synchronous Signal K security hooks and constructs a fresh bearer-only authentication object per check. A request-scoped access context binds the identity, plugin lifecycle and exact self-context path/source grants. All telemetry/discovery/source tools use that context. Admin-only inventory checks run before host access and again after async reads. Non-admin server information and diagnosis omit internal provider details. The native router may be registered after startup; admission remains closed until its permission-aware classification is available. See [permission contract and tests](docs/READ-ONLY-USERS.md).
+`src/auth.ts` isolates the native authentication/ACL bridge (since 1.1.0). It requires enabled, synchronous Signal K security hooks and constructs a fresh bearer-only authentication object per check. A request-scoped access context binds the identity, plugin lifecycle and exact self-context path/source grants. All telemetry/discovery/source tools use that context. Admin-only inventory checks run before host access and again after async reads. Non-admin server information and diagnosis omit internal provider details. The native router may be registered after startup; admission remains closed until its permission-aware classification is available. See [permission contract and tests](docs/READ-ONLY-USERS.md).
 
 `src/safety.ts` holds validation, prefix checks, constant-length hashed secret comparison and bounded safe copying. Redaction is defense in depth. It is not a substitute for field allowlists or an authorization boundary.
 
@@ -30,7 +30,7 @@ flowchart TD
 ## Decisions
 
 - Run inside Signal K to reuse its lifecycle, network listener and official data access. No additional service, hostname, certificate or port is assumed.
-- In the development build, classify MCP routes as readonly and verify existing native bearer identities, including per-path/source ACLs; keep operational inventories admin-only. Retain the separate environment-held key and exact Host/Origin policy. Published 1.0.1 uses the earlier admin-only model.
+- From 1.1.0, classify MCP routes as readonly and verify existing native bearer identities, including per-path/source ACLs; keep operational inventories admin-only. Retain the separate environment-held key and exact Host/Origin policy. Version 1.0.x uses the earlier admin-only model.
 - Use named tools for discoverability and small, bounded responses. No code execution tool is exposed.
 - Prefer supported APIs. Server-internal functions need isolated, versioned adapters and an explicit unsupported state. Published API types do not establish runtime compatibility by themselves.
 - Return native units, timestamps and unknown values honestly. Do not infer system health from absence of data.
