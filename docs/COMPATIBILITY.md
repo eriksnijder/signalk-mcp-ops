@@ -4,7 +4,7 @@ The package's Node.js requirement is **22 or newer**. Automated tests cover Node
 
 ## Unreleased native read-only user support
 
-The development build adds native bearer identity and self-context path/source permission checks, including discovery and alternate source identifiers. It requires enabled native security and permission-aware routing; connection/status/plugin inventories remain admin-only. See [behavior, compatibility and reproduction](READ-ONLY-USERS.md). Published 1.0.1 and historical acceptance evidence below retain their previous admin-only model. New-feature tests do not establish a boat deployment or a published release.
+Version 1.1.0 adds native bearer identity and self-context path/source permission checks, including discovery and alternate source identifiers. It requires enabled native security and permission-aware routing; connection/status/plugin inventories remain admin-only. See [behavior, compatibility and reproduction](READ-ONLY-USERS.md). Version 1.0.x and the historical acceptance evidence below retain their previous admin-only model. Automated tests of the new features do not by themselves establish a boat deployment.
 
 ## Published release: 1.0.0
 

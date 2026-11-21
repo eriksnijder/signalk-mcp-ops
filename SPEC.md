@@ -1,4 +1,4 @@
-# Specification: development build
+# Specification: version 1.1.0
 
 ## Scope and transport
 
@@ -37,7 +37,7 @@ Internal provider reads are restricted to the isolated 2.31 adapter and runtime 
 
 Successful results use `{ "ok": true, "data": ... }`; failures use `{ "ok": false, "error": { "code": "..." } }` with MCP `isError: true`. Both JSON text and `structuredContent` contain the envelope. SDK input/protocol validation errors follow the SDK contract instead. Error codes: `NOT_FOUND`, `NOT_A_VALUE_PATH`, `PATH_NOT_ALLOWED`, `UNSUPPORTED`, `RESULT_TOO_LARGE`, `INVALID_DATA`, `INTERNAL_ERROR`. Raw exception messages are never returned.
 
-## Native permissions (unreleased)
+## Native permissions (since 1.1.0)
 
 The MCP route requires an explicit native Signal K bearer token and the additional MCP key. Authenticated readonly/readwrite/admin identities may use telemetry under the intersection of configured prefixes and exact native self-context path/source read permission. Native admins do not bypass these ACLs. `list_connections`, `get_connection_status` and `list_plugins` additionally require admin role; non-admin `get_server_info` omits internal-adapter detail and diagnosis omits provider context. All nine tools remain discoverable with explicit admin-only descriptions.
 

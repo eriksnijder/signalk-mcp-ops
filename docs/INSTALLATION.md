@@ -12,7 +12,7 @@ npm install --ignore-scripts signalk-mcp-ops
 
 Restart Signal K to discover the plugin. It is disabled by default. Complete the key and access configuration below before enabling it. This version has no separate web interface; you use it through a compatible MCP client.
 
-## Test the prepared 1.0 release
+## Test a local build
 
 For a local development build, use a clean repository checkout with Node.js >=22. The following builds a local package; it does not publish it to npm:
 
@@ -22,11 +22,11 @@ npm test
 npm pack
 ```
 
-Install the generated `signalk-mcp-ops-1.0.0.tgz` in the Signal K configuration directory, using the account that runs Signal K:
+Install the generated `signalk-mcp-ops-<version>.tgz` in the Signal K configuration directory, using the account that runs Signal K:
 
 ```sh
 cd <Signal K configuration directory>
-npm install --ignore-scripts /path/to/signalk-mcp-ops-1.0.0.tgz
+npm install --ignore-scripts /path/to/signalk-mcp-ops-<version>.tgz
 ```
 
 The tarball includes compiled `dist/` code. Installation does not require TypeScript or install-time scripts. Restart Signal K to discover the plugin, deploy the MCP key as described below, then configure and enable the plugin in the Admin UI.
@@ -98,13 +98,13 @@ Authorization: Bearer <Signal K token>
 X-MCP-Ops-Key: <MCP Ops key>
 ```
 
-In the development build, the route accepts **authenticated Signal K read-only, read-write and admin identities**. Telemetry is checked against native path/source read permissions, even for admins. Connection inventory/status and plugin inventory remain admin-only. Both headers are required. Signal K security must be enabled; missing or unknown native security hooks disable the endpoint. Published 1.0.1 still requires an admin token.
+From version 1.1.0, the route accepts **authenticated Signal K read-only, read-write and admin identities**. Telemetry is checked against native path/source read permissions, even for admins. Connection inventory/status and plugin inventory remain admin-only. Both headers are required. Signal K security must be enabled; missing or unknown native security hooks disable the endpoint. Version 1.0.x requires an admin token.
 
 Use the existing Signal K HTTPS endpoint for remote clients. This version provides no OAuth discovery or OAuth authorization server; clients requiring that flow are unsupported. See [SECURITY.md](../SECURITY.md) for the existing trust model and deployment limits.
 
-## Dedicated read-only user (development build)
+## Dedicated read-only user
 
-This setup requires the unreleased read-only-user feature; installing published 1.0.1 does not enable it. Existing admin-token clients require no credential or settings migration.
+This setup requires version 1.1.0 or newer; version 1.0.x does not support it. Existing admin-token clients require no credential or settings migration.
 
 1. In Signal K Admin UI, enable security and create a dedicated user such as `mcp-reader` with **Read Only** permission. Do not grant admin or write permissions for telemetry access.
 2. Configure Signal K's native ACLs if this user should see only particular paths or sources. With no ACLs configured, native Signal K policy permits reads; the plugin's configured path prefixes still apply. Follow native rule ordering rather than treating the plugin key as a user permission.

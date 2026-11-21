@@ -1,6 +1,6 @@
 # Release procedure
 
-The public baseline is [v0.1.0, published on 2026-09-29](https://github.com/eriksnijder/signalk-mcp-ops/releases/tag/v0.1.0). Current development prepares **1.0.0**; the unpublished 1.0.0-rc.1 candidate supplied the live acceptance evidence. A release candidate is not stable 1.0 and must not replace npm's `latest` tag. Publication, tagging and a GitHub Release require a separate release decision.
+The current published stable version is **1.0.1**; this procedure prepares **1.1.0**. Below, `<version>` means the version in package.json. A release candidate must not replace npm's `latest` tag. Publication, tagging and a GitHub Release require a separate release decision.
 
 ## 1. Verify the reviewed commit
 
@@ -10,8 +10,8 @@ The public baseline is [v0.1.0, published on 2026-09-29](https://github.com/erik
 - Confirm project CI and SignalK Plugin CI are green for that exact commit.
 - Manually run SignalK Plugin CI integration against explicit versions `["2.31.0", "2.35.1"]` with Node 22 and 24. Record versions and run links; a historical `latest` result is not evidence for today's latest server.
 - Run `npm pack`, retain the exact tarball, record its SHA-256 and inspect its contents. The published package must contain compiled code, the declared app icon, approved documentation, metadata and license only. No credentials, environment files, test fixtures or local configuration may ship.
-- Test that exact artifact on the reference Signal K runtime. Verify Signal K admin authentication, missing/wrong MCP key rejection, host/origin rejection, nine tools, allowed/denied paths, provider projections, text withholding, stop/restart and proxy/body-limit behavior. `verify:package` proves clean consumer loading and an MCP exchange with a simulated host; it is not this live acceptance test.
-- Record findings in [the 1.0 acceptance checklist](RELEASE-1.0.md). Do not copy v0.1's historical operator validation as a new result.
+- Test that exact artifact on the reference Signal K runtime. Verify Signal K admin and read-only user authentication, missing/wrong MCP key rejection, host/origin rejection, the fourteen tools (including `get_vessel_overview`, `search_paths` and `list_alarms` against real boat data), allowed/denied paths, provider projections, text withholding, stop/restart and proxy/body-limit behavior. `verify:package` proves clean consumer loading and an MCP exchange with a simulated host; it is not this live acceptance test.
+- Record findings in the GitHub Release notes, using [the 1.0 acceptance checklist](RELEASE-1.0.md) as a template. Do not copy earlier operator validation as a new result.
 
 ## 2. Publishing identity and security reporting
 
@@ -31,13 +31,13 @@ Check the intended version with `npm view signalk-mcp-ops versions --json` and v
 
 ## 3. Publish only after a release decision
 
-The prepared stable artifact is `signalk-mcp-ops-1.0.0.tgz`. After completing acceptance and receiving explicit publication approval, publish that exact inspected artifact:
+After completing acceptance and receiving explicit publication approval, publish the exact inspected artifact:
 
 ```sh
-npm publish ./signalk-mcp-ops-1.0.0.tgz --access public --tag latest
+npm publish ./signalk-mcp-ops-<version>.tgz --access public --tag latest
 ```
 
-Verify the registry version, integrity and packaged files, then tag the matching source commit `v1.0.0` and create the stable GitHub Release. Record the actual publication date in the GitHub Release and release-verification report. If any packaged source or documentation changes after inspection, rebuild and revalidate the artifact before publication. Never overwrite or reuse a published version.
+Verify the registry version, integrity and packaged files, then tag the matching source commit `v<version>` and create the stable GitHub Release from its CHANGELOG section. Record the actual publication date in the GitHub Release and release-verification report. If any packaged source or documentation changes after inspection, rebuild and revalidate the artifact before publication. Never overwrite or reuse a published version.
 
 For a future approved prerelease, use a prerelease version and a non-default tag such as `next`, and create a GitHub prerelease. Keep `latest` on the previous stable version until stable publication is approved; App Store indexing of a prerelease is not assumed.
 
