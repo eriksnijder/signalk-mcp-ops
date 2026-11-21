@@ -75,7 +75,7 @@ Example options, with a generic local host:
 {
   "allowedHosts": ["localhost:3000"],
   "allowedOrigins": [],
-  "pathPrefixes": ["navigation", "environment", "electrical", "propulsion", "tanks"],
+  "pathPrefixes": ["navigation", "environment", "electrical", "propulsion", "tanks", "notifications"],
   "staleAfterSeconds": 300
 }
 ```
