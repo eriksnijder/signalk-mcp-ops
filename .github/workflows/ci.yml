@@ -45,7 +45,7 @@ jobs:
         run: npm install --prefix "$RUNNER_TEMP/signalk-auth" --ignore-scripts --omit=optional --no-audit --no-fund "signalk-server@$SIGNALK_VERSION"
         env:
           SIGNALK_VERSION: ${{ matrix.signalk }}
-      - run: npm run test:integration
+      - run: npm run test:native-auth
         env:
           SIGNALK_TEST_SERVER_DIR: ${{ runner.temp }}/signalk-auth/node_modules/signalk-server
           SIGNALK_TEST_SERVER_VERSION: ${{ matrix.signalk }}

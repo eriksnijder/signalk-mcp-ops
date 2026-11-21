@@ -42,7 +42,7 @@ npm ci --ignore-scripts
 npm test
 npm install --prefix /tmp/signalk-auth-231 --ignore-scripts --omit=optional --no-audit --no-fund signalk-server@2.31.0
 SIGNALK_TEST_SERVER_DIR=/tmp/signalk-auth-231/node_modules/signalk-server \
-SIGNALK_TEST_SERVER_VERSION=2.31.0 npm run test:integration
+SIGNALK_TEST_SERVER_VERSION=2.31.0 npm run test:native-auth
 ```
 
 Use a fresh runtime directory and repeat for 2.35.1. CI tests each server version on Node 22 and 24. The explicit integration runner uses Node's force-exit option after the tests and cleanup hooks; a test assertion failure still fails the run. No operational server credentials or vessel data are used. A passing local/CI test is not vessel acceptance or compatibility evidence for every Signal K version.
