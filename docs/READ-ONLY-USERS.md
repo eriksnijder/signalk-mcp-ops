@@ -9,11 +9,13 @@ Published 1.0.1 requires an admin token. This development change accepts existin
 | `read_path`, `list_paths` | Configured prefix and native path/source read grant | Same native checks; no admin ACL bypass |
 | `inspect_path_sources` | Selected value must be authorized; filter each alternate source | Same native checks |
 | `diagnose_missing_path` | Authorized telemetry only; no connection/provider context | Authorized telemetry plus existing bounded provider context |
+| `search_paths`, `read_paths`, `list_alarms`, `get_vessel_overview` | Same prefix and native path/source checks per value; denied values are omitted from search, overview and alarms, and reported per entry by `read_paths` | Same native checks |
+| `get_usage_guide`, guide resource | Static guidance | Same |
 | `get_server_info` | Basic capabilities; internal adapter details withheld | Existing bounded adapter compatibility details |
 | `get_security_status` | Plugin policy and verified native security availability | Same |
 | `list_connections`, `get_connection_status`, `list_plugins` | `ADMIN_REQUIRED` | Existing bounded projections |
 
-The nine tools remain discoverable for every authenticated caller; admin-only descriptions explain their requirements. Discovery does not grant execution permission. Native telemetry ACLs do not authorize access to host connection or package inventories, hence the separate admin gate.
+All tools remain discoverable for every authenticated caller; admin-only descriptions explain their requirements. Discovery does not grant execution permission. Native telemetry ACLs do not authorize access to host connection or package inventories, hence the separate admin gate.
 
 Every measurement uses the exact native call `checkACL(identifier, 'vessels.self', path, source, 'read')`; only literal `true` grants access. These are Signal K's own rule-ordering semantics, not an additional independent source/path ACL language. There is no configured-ACL admin bypass. With no native ACLs configured, the host permits reads; administrators must configure native restrictions if needed. Plugin prefix restrictions always apply as another boundary.
 

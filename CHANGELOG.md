@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Home Assistant-style read tools: `get_vessel_overview` (one-call vessel summary), `search_paths` (find paths by words and meta labels), `read_paths` (batch reads with optional display units), `list_alarms` (notifications by severity) and `get_usage_guide`, plus a guide resource and server instructions. All stay read-only and use the same prefix and native ACL checks.
+- Add `notifications` to the default path prefixes.
 - Allow dedicated Signal K read-only/read-write users and devices to access read-only MCP telemetry using their existing bearer tokens, while retaining the additional MCP key and Host/Origin policies.
 - Enforce native self-context path/source read permissions on values, path discovery and source identifiers, including for administrators. Fail closed when native security or permission-aware routing is unavailable; guest/cookie/query-only authentication is not accepted.
 - Keep connection and plugin inventories/status admin-only. Omit provider context for non-admin diagnoses, and make missing/denied paths indistinguishable when source permission cannot be established.

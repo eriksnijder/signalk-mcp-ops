@@ -6,7 +6,7 @@ export const pathSchema = z.string().min(1).max(256).regex(/^[A-Za-z0-9_-]+(?:\.
 export const settingsSchema = z.object({
   allowedHosts: z.array(z.string().min(1).max(255)).min(1).max(20),
   allowedOrigins: z.array(z.string().url().max(512)).max(20).default([]),
-  pathPrefixes: z.array(pathSchema).min(1).max(30).default(['navigation', 'environment', 'electrical', 'propulsion', 'tanks']),
+  pathPrefixes: z.array(pathSchema).min(1).max(30).default(['navigation', 'environment', 'electrical', 'propulsion', 'tanks', 'notifications']),
   staleAfterSeconds: z.number().int().min(1).max(86400).default(300)
 }).strict()
 export type Settings = z.infer<typeof settingsSchema>

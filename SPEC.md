@@ -8,7 +8,7 @@ Endpoint: `/plugins/signalk-mcp-ops/mcp`, registered through Signal K's plugin r
 
 ## API matrix
 
-Nine tools are registered and returned by `tools/list`. Four planned/reserved entries below remain unregistered.
+Fourteen tools are registered and returned by `tools/list`, plus one static resource (`signalk-mcp-ops://guide`) and server instructions. Four planned/reserved entries below remain unregistered.
 
 | Tool | Input | Source | Candidate behavior / stability |
 | --- | --- | --- | --- |
@@ -18,6 +18,11 @@ Nine tools are registered and returned by `tools/list`. Four planned/reserved en
 | `list_paths` | optional `prefix`, `offset=0`, `limit=50` | bounded traversal via `getSelfPath` | Implemented; sorted page, `nextOffset`, `truncated` |
 | `inspect_path_sources` | `path` | leaf `$source` and `values` keys | Implemented; no raw source connection configuration |
 | `diagnose_missing_path` | `path` | path read plus timestamp | Implemented; missing/fresh/stale/unknown freshness |
+| `get_vessel_overview` | none | well-known self paths, discovered battery/tank/engine instances, notifications | Implemented; omits unreadable/absent items; native value plus `display` |
+| `search_paths` | `query`, optional `prefix`, `limit=20` (<=50) | bounded traversal plus leaf `meta` | Implemented; all words must match path or displayName/shortName/description |
+| `read_paths` | `paths` (1-25, de-duplicated), `convertUnits=false` | `read_path` per entry | Implemented; per-entry `ok`/`error.code` |
+| `list_alarms` | `includeNormal=false`, `limit=50` (<=100) | `notifications` leaves | Implemented; sorted emergency > alarm > warn > alert; requires `notifications` prefix |
+| `get_usage_guide` | none | static text | Implemented; also served as resource `signalk-mcp-ops://guide` |
 | `get_security_status` | none | plugin policy | Implemented; native security verified available, TLS deployment-dependent |
 | `list_connections` | none | isolated 2.31 internal adapter | Implemented; connections with id, enabled, type only |
 | `get_connection` | `id` | planned projected provider config | Planned/reserved; not registered |
@@ -42,7 +47,9 @@ Additional codes: `ADMIN_REQUIRED`, `PATH_UNAVAILABLE`, `BEARER_TOKEN_REQUIRED`,
 
 `list_plugins` returns a bounded `plugins` array and `truncated`. Each entry contains `id`, `name`, `version`, and `enabled`. Missing or non-string names are null; names are capped at 256 characters. Unexpected FeatureInfo shapes still return `UNSUPPORTED`.
 
-`read_path` returns `path`, `value`, `timestamp`, `ageSeconds`, `stale`, `source`, and `units`. Missing timestamps/freshness/source/units are null. Null sensor values remain null. Age is computed using server time, clamped to zero for future timestamps; clock correctness is not verified. Staleness uses the operator's threshold (default 300 seconds), which may be unsuitable for infrequently updated paths. Native Signal K units are retained; no conversions or interpolations occur.
+`read_path` returns `path`, `value`, `timestamp`, `ageSeconds`, `stale`, `source`, and `units`. Missing timestamps/freshness/source/units are null. Null sensor values remain null. Age is computed using server time, clamped to zero for future timestamps; clock correctness is not verified. Staleness uses the operator's threshold (default 300 seconds), which may be unsuitable for infrequently updated paths. Native Signal K units are retained; no conversions or interpolations occur. `read_paths` (with `convertUnits`) and `get_vessel_overview` add a separate `display` `{ value, units }` for common SI units (m/s→kn, rad→°, K→°C, ratio→%, Pa→hPa/bar, m3→L, Hz→rpm on propulsion, C→Ah, J→Wh, m→nm for log/distance paths); it is presentation only and null when no conversion applies.
+
+`notifications` is part of the default prefixes so alarms are readable; operators with explicit prefixes must add it. Notification `message` strings are capped at 512 characters and `method` at 4 entries. Overview instance discovery is capped at 10 batteries, 8 tank types x 8 tanks and 6 engines; child names are used only to attempt authorized reads and are not returned unless a read succeeds.
 
 `diagnose_missing_path` maps `NOT_FOUND` to `missing` and `PATH_UNAVAILABLE` to `unavailable`. Other adapter errors remain errors. Unavailable does not reveal whether the path exists. Missing data does not prove that a sensor or connection is broken.
 

@@ -4,13 +4,16 @@
 
 | Ask your AI assistant… | What it can check |
 | --- | --- |
+| **“How is the boat doing?”** | One overview of position, speed, heading, wind, depth, batteries, tanks, engines and active alarms. |
+| **“What's the house battery voltage?”** | Search paths by everyday words and read several values at once, converted to knots, degrees, °C, % or litres. |
+| **“Are there any alarms?”** | Active Signal K notifications, most severe first. |
 | **“Why has my wind data disappeared?”** | Whether the path exists, when it last updated, and whether any configured connections report errors. |
 | **“Is this battery voltage reading still fresh?”** | The value, timestamp and age of the reading against your configured freshness threshold. |
 | **“Where is this depth reading coming from?”** | The selected source and other source identifiers available for that path. |
 | **“Which data connections report a problem?”** | Connection inventory, reported status and the presence of previous errors. |
 | **“What data and plugins are available?”** | Discover permitted telemetry paths and list installed plugins. |
 
-**MCP Operations & Diagnostics** connects a compatible AI assistant to your Signal K server. It gives the assistant nine read-only tools to inspect available data and explain what it finds. Answers depend on the data your server supplies and the paths you allow; a missing value does not prove a sensor has failed.
+**MCP Operations & Diagnostics** connects a compatible AI assistant to your Signal K server. It gives the assistant fourteen read-only tools and a usage guide to inspect available data and explain what it finds. Answers depend on the data your server supplies and the paths you allow; a missing value does not prove a sensor has failed.
 
 The plugin cannot change settings, restart services or control the boat. It is a diagnostic aid, not a navigation instrument.
 
