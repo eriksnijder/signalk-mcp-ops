@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Rewrite the README for boaters who aren't technical: example questions and a sample answer, what the plugin never does, a privacy note, step-by-step OpenPlotter setup, AI app examples, a plain-language troubleshooting table and the version each feature needs. Plain Markdown only, because the Signal K Appstore shows HTML as text.
 - Add Home Assistant-style read tools: `get_vessel_overview` (one-call vessel summary), `search_paths` (find paths by words and meta labels), `read_paths` (batch reads with optional display units), `list_alarms` (notifications by severity) and `get_usage_guide`, plus a guide resource and server instructions. All stay read-only and use the same prefix and native ACL checks.
 - Add `notifications` to the default path prefixes.
 - Allow dedicated Signal K read-only/read-write users and devices to access read-only MCP telemetry using their existing bearer tokens, while retaining the additional MCP key and Host/Origin policies.
