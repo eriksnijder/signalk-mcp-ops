@@ -38,6 +38,9 @@ You don't need to know Signal K path names. Ask the way you would ask a crew mem
 | *"Where is my depth reading coming from?"* | Shows which source (for example an NMEA 2000 sensor) supplies the value and which other sources exist. | 1.0 |
 | *"Which data connections have a problem?"* | Lists your configured connections and which ones report errors (admin only). | 1.0 |
 | *"What data is available on this boat?"* | Lists the data paths you allowed it to read, and installed plugins (admin only). | 1.0 |
+| *"Which plugin is giving errors?"* | Lists plugins that report an error or status message, like the plugin list in the Admin UI (admin only). | 1.2 |
+| *"What's going wrong? Check the server log."* | Reads recent Signal K server log lines, filtered to likely problems, with passwords and tokens removed (admin only, off unless you turn it on). | 1.2 |
+| *"Why isn't my NMEA 2000 data coming in?"* | Combines a missing-data check with plugin status and log lines that mention the connection. | 1.2 |
 
 ### Example conversation
 
@@ -55,7 +58,7 @@ The assistant converts Signal K's internal units to knots, degrees, °C, %, litr
 
 - **No control.** It cannot switch circuits, change the autopilot, acknowledge alarms, change settings or restart services. There is no "write" function in the plugin at all.
 - **No navigation advice.** It is a diagnostic and information aid, not a navigation instrument. Always check your primary instruments for anything safety-critical.
-- **No secrets.** It never returns passwords, tokens, connection settings or log files.
+- **No secrets.** It never returns passwords, tokens or connection settings. Server logs are only readable if you switch that on, and likely secrets are removed from them first (see [Reading the server log](#reading-the-server-log)).
 - **Only what you allow.** It reads only the data areas you choose (by default: navigation, environment, electrical, propulsion, tanks and notifications), and it respects your Signal K user permissions.
 
 **Privacy note:** the values the assistant reads, such as your position, are sent to the AI service you use (for example OpenAI or Anthropic), the same as anything else you type into it. If you don't want to share your position, remove `navigation` from the allowed data areas.
@@ -130,6 +133,7 @@ In the Admin UI, open **Server → Plugin Config → MCP Operations & Diagnostic
 | **Allowed origins** | Leave empty. Delete any empty row. |
 | **Path prefixes** | The data areas the assistant may read. The default is fine for most boats; remove `navigation` to keep your position private. |
 | **Stale after seconds** | When a value counts as "old". The default 300 (5 minutes) suits most boats. |
+| **Allow admins to read the server log** | Off by default. Turn on if you want the assistant to look in the server log when something goes wrong (admin token needed). See [Reading the server log](#reading-the-server-log). |
 
 Enable the plugin and click **Submit**. The plugin status should show **Read-only MCP ready**.
 
@@ -198,6 +202,21 @@ Ask *"What tools do you have for my boat?"* and then *"How is the boat doing?"*.
 
 ---
 
+## Reading the server log
+
+From version 1.2 the assistant can look in the **Signal K server log**, the same text you see under **Server → Server Log** in the Admin UI. This is often the quickest way to find out why a plugin or connection isn't working.
+
+- **Off by default.** Turn on *Allow admins to read the server log* in the plugin settings. It also needs an **admin** token; read-only users never see logs.
+- **Secrets are removed first.** Passwords, tokens, API keys, login details in addresses and private keys are replaced with `[REDACTED]` before anything leaves the boat, including your MCP key. This catches the common cases, but log text can still mention host names, file paths or your position, and that text goes to your AI service.
+- **Short memory.** Signal K keeps only the last 100 pieces of output in memory, and they are lost when Signal K restarts. Times have no year or time zone.
+- **Read-only.** The plugin never clears the log or changes debug settings.
+
+Example questions: *"Which plugin is giving errors?"*, *"Check the server log for problems since the restart"*, *"Does the log say anything about can0?"*
+
+Even without the log switch, an admin can ask which plugins report an error: that uses the short status messages that plugins show in the Admin UI.
+
+---
+
 ## Troubleshooting
 
 | What you see | What it usually means | What to do |
@@ -208,7 +227,8 @@ Ask *"What tools do you have for my boat?"* and then *"How is the boat doing?"*.
 | Error **403 / FORBIDDEN_ORIGIN_OR_HOST** | The address in *Allowed hosts* doesn't match exactly | Use the same host **and port** your AI app connects to. |
 | **PATH_NOT_ALLOWED** | That data area isn't in *Path prefixes* | Add it in the plugin settings (for alarms: `notifications`). |
 | **PATH_UNAVAILABLE** | No data there, or this user may not read it | Check the sensor and your Signal K access rules. |
-| **ADMIN_REQUIRED** | Connection and plugin checks need an admin token | Use an admin token only if you need those checks. |
+| **ADMIN_REQUIRED** | Connection, plugin and log checks need an admin token | Use an admin token only if you need those checks. |
+| **LOGS_DISABLED** | Reading the server log is switched off | Turn on *Allow admins to read the server log* in the plugin settings. |
 | Values are **stale** | The data stopped updating | Instruments may be off; ask *"Why is this reading stale?"* |
 
 More help: [installation troubleshooting](docs/INSTALLATION.md#troubleshooting-startup).
@@ -233,6 +253,8 @@ The assistant chooses these itself; you don't have to name them.
 | `get_server_info`, `get_security_status` | What the plugin can do and how it is protected | 1.0 |
 | `list_connections`, `get_connection_status` | Data connections and their errors (admin) | 1.0 |
 | `list_plugins` | Installed Signal K plugins (admin) | 1.0 |
+| `get_plugin_status` | Which plugins report errors or status messages (admin) | 1.2 |
+| `get_server_logs` | Recent server log lines, secrets removed (admin, opt-in) | 1.2 |
 
 Exact inputs, outputs and limits are in the [specification](SPEC.md).
 
@@ -254,7 +276,7 @@ Details: [compatibility and validation](docs/COMPATIBILITY.md).
 - [Read-only users and permissions](docs/READ-ONLY-USERS.md)
 - [Tools, inputs and response formats](SPEC.md)
 - [Security and private vulnerability reporting](SECURITY.md)
-- [Server log access](docs/SERVER-LOGS.md): not available through MCP yet
+- [Server log access](docs/SERVER-LOGS.md): how log reading works and its limits
 - [Release procedure](docs/PUBLISHING.md) · [1.0 acceptance checklist](docs/RELEASE-1.0.md)
 
 ## Contributing and development

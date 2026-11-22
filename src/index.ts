@@ -45,7 +45,9 @@ function pluginFactory(app: ServerAPI): Plugin {
       allowedHosts: { type: 'array', minItems: 1, items: { type: 'string' }, title: 'Exact Host headers including port' },
       allowedOrigins: { type: 'array', items: { type: 'string' }, default: [] },
       pathPrefixes: { type: 'array', minItems: 1, items: { type: 'string' }, default: ['navigation', 'environment', 'electrical', 'propulsion', 'tanks', 'notifications'] },
-      staleAfterSeconds: { type: 'integer', minimum: 1, maximum: 86400, default: 300 }
+      staleAfterSeconds: { type: 'integer', minimum: 1, maximum: 86400, default: 300 },
+      allowServerLogs: { type: 'boolean', default: false, title: 'Allow admins to read the server log through MCP',
+        description: 'Off by default. Lets an admin token read recent Signal K server log lines. Likely secrets are removed, but log text can still contain sensitive details such as positions or host names.' }
     } },
     start(options) {
       settings = undefined; token = ''
@@ -83,7 +85,7 @@ function pluginFactory(app: ServerAPI): Plugin {
         if (!settings) { res.sendStatus(503); return }
         if (active.size >= 8) { res.status(429).json({ error: 'BUSY' }); return }
         if (Buffer.byteLength(JSON.stringify(req.body) ?? '') > 65536) { res.sendStatus(413); return }
-        const server = createServer(app, settings, res.locals.mcpAccess as ReadAccess)
+        const server = createServer(app, settings, res.locals.mcpAccess as ReadAccess, [token])
         const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })
         active.add(server)
         let cleaned = false

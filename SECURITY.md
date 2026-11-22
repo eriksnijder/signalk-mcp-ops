@@ -1,6 +1,6 @@
 # Security policy and model
 
-From version 1.1.0, the plugin supports authenticated native read-only users with path/source permissions. Version 1.0.x retains its admin-only route model. Historical live acceptance on Signal K 2.31.0 / Node 22.23.2 / OpenPlotter does not validate this new authorization feature; see [compatibility record](docs/COMPATIBILITY.md) and [native permission tests](docs/READ-ONLY-USERS.md). Read-only access still exposes sensitive operational data, potentially including position. Limit configured prefixes, native ACL grants and trusted clients. This is not a comprehensive security audit.
+From version 1.1.0, the plugin supports authenticated native read-only users with path/source permissions. Version 1.0.x retains its admin-only route model. Historical live acceptance on Signal K 2.31.0 / Node 22.23.2 / OpenPlotter does not validate this new authorization feature; see [compatibility record](docs/COMPATIBILITY.md) and [native permission tests](docs/READ-ONLY-USERS.md). Read-only access still exposes sensitive operational data, potentially including position. From 1.2, admins can also read redacted server log lines, but only if the operator enables `allowServerLogs`. Redaction is best-effort, and log text may still contain host names, paths or positions. Limit configured prefixes, native ACL grants and trusted clients. This is not a comprehensive security audit.
 
 ## Trust boundaries
 

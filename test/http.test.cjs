@@ -39,9 +39,9 @@ test('real MCP client handshake, tools, isolation, rejection and lifecycle', asy
   assert.equal(client.getServerVersion().version, require('../package.json').version)
   assert.equal(plugin.getOpenApi().info.version, require('../package.json').version)
   const tools = await client.listTools()
-  assert.equal(tools.tools.length, 14)
+  assert.equal(tools.tools.length, 16)
   assert.deepEqual(tools.tools.map(tool => tool.name).sort(), [
-    'diagnose_missing_path', 'get_connection_status', 'get_security_status', 'get_server_info', 'get_usage_guide', 'get_vessel_overview',
+    'diagnose_missing_path', 'get_connection_status', 'get_plugin_status', 'get_security_status', 'get_server_info', 'get_server_logs', 'get_usage_guide', 'get_vessel_overview',
     'inspect_path_sources', 'list_alarms', 'list_connections', 'list_paths', 'list_plugins', 'read_path', 'read_paths', 'search_paths'
   ])
   assert.ok(tools.tools.every(t => t.annotations.readOnlyHint && !t.annotations.destructiveHint))
@@ -52,7 +52,7 @@ test('real MCP client handshake, tools, isolation, rejection and lifecycle', asy
   const inventory = (await call('list_plugins')).structuredContent.data.plugins
   assert.deepEqual(inventory[0], { id: 'sample', name: 'Sample Plugin', version: '1', enabled: true })
   assert.equal((await call('diagnose_missing_path', { path: 'navigation.missing' })).structuredContent.data.state, 'missing')
-  for (const name of ['get_connection', 'get_plugin_status', 'get_plugin_config', 'get_recent_errors']) {
+  for (const name of ['get_connection', 'get_plugin_config', 'get_recent_errors']) {
     assert.equal((await call(name, { id: 'sample' })).isError, true)
   }
   assert.equal((await call('read_path', { path: 'security.password' })).structuredContent.error.code, 'PATH_NOT_ALLOWED')
