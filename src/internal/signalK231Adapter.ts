@@ -2,24 +2,24 @@ import { DiagnosticError, safeCopy } from '../safety.js'
 
 // Source contract: SignalK/signalk-server v2.31.0, src/index.ts,
 // src/interfaces/providers.ts and src/pipedproviders.ts. No upstream code copied.
-function field(value: unknown, key: string): unknown {
+export function field(value: unknown, key: string): unknown {
   if ((!value || typeof value !== 'object') && typeof value !== 'function') throw new DiagnosticError('UNSUPPORTED')
   const descriptor = Object.getOwnPropertyDescriptor(value, key)
   if (!descriptor) return undefined
   if (!('value' in descriptor)) throw new DiagnosticError('UNSUPPORTED')
   return descriptor.value
 }
-function array(value: unknown, limit: number): unknown[] {
+export function array(value: unknown, limit: number): unknown[] {
   if (!Array.isArray(value)) throw new DiagnosticError('UNSUPPORTED')
   if (value.length > limit) throw new DiagnosticError('RESULT_TOO_LARGE')
   return Array.from({ length: value.length }, (_, i) => field(value, String(i)))
 }
-function identifier(value: unknown): string {
+export function identifier(value: unknown): string {
   if (typeof value !== 'string' || !/^[A-Za-z0-9_.:@/-]+$/.test(value) || ['__proto__', 'constructor', 'prototype'].includes(value)) throw new DiagnosticError('UNSUPPORTED')
   if (value.length > 256) throw new DiagnosticError('RESULT_TOO_LARGE')
   return value
 }
-function timestamp(value: unknown): string | null {
+export function timestamp(value: unknown): string | null {
   if (value === undefined) return null
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) || !Number.isFinite(Date.parse(value))) throw new DiagnosticError('UNSUPPORTED')
   return value

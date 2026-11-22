@@ -74,7 +74,7 @@ test('MCP outputs exclude configuration and secrets; diagnoses preserve states a
     assert.doesNotMatch(JSON.stringify(result), /secret-password|secret-token|secret-api-key|secret-user|private-host|private\/path|subOptions|"options"/)
     return result.structuredContent
   }
-  assert.equal((await client.listTools()).tools.length, 14)
+  assert.equal((await client.listTools()).tools.length, 16)
   assert.equal((await call('list_connections')).data.connections.length, 3)
   assert.equal((await call('get_connection_status', { id: 'input' })).data.status, 'error')
   assert.equal((await call('get_server_info')).data.internalAdapter.compatible, true)

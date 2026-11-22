@@ -13,7 +13,8 @@ Version 1.0.x requires an admin token. From version 1.1.0, the plugin accepts ex
 | `get_usage_guide`, guide resource | Static guidance | Same |
 | `get_server_info` | Basic capabilities; internal adapter details withheld | Existing bounded adapter compatibility details |
 | `get_security_status` | Plugin policy and verified native security availability | Same |
-| `list_connections`, `get_connection_status`, `list_plugins` | `ADMIN_REQUIRED` | Existing bounded projections |
+| `list_connections`, `get_connection_status`, `list_plugins`, `get_plugin_status` | `ADMIN_REQUIRED` | Existing bounded projections; plugin status text is cleaned |
+| `get_server_logs` | `ADMIN_REQUIRED` | Redacted recent log lines when the operator enabled `allowServerLogs`; otherwise `LOGS_DISABLED` |
 
 All tools remain discoverable for every authenticated caller; admin-only descriptions explain their requirements. Discovery does not grant execution permission. Native telemetry ACLs do not authorize access to host connection or package inventories, hence the separate admin gate.
 

@@ -2,15 +2,17 @@ import { PLUGIN_VERSION } from './version.js'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { SignalK231Adapter } from './internal/signalK231Adapter.js'
+import { ServerDiagnostics } from './internal/serverDiagnostics.js'
 import { SignalKAdapter, type ReadAPI } from './adapter.js'
 import type { ReadAccess } from './auth.js'
 import { SERVER_INSTRUCTIONS, USAGE_GUIDE } from './guide.js'
 import { DiagnosticError, pathSchema, safeCopy, type Settings } from './safety.js'
 
-export function createServer(app: ReadAPI, settings: Settings, access: ReadAccess) {
+export function createServer(app: ReadAPI, settings: Settings, access: ReadAccess, knownSecrets: readonly string[] = []) {
   const server = new McpServer({ name: 'signalk-mcp-ops', version: PLUGIN_VERSION }, { instructions: SERVER_INSTRUCTIONS })
   const adapter = new SignalKAdapter(app, settings, access)
   const providers = new SignalK231Adapter(app)
+  const diagnostics = new ServerDiagnostics(app, knownSecrets)
   const adminUnavailable = () => ({ available: false, error: { code: 'ADMIN_REQUIRED' } })
   const providerContext = (sources?: string[]) => access.isAdmin() ? providers.context(sources) : adminUnavailable()
   const register = (name: string, description: string, schema: z.ZodRawShape, run: (args: any) => unknown, adminOnly = false) => {
@@ -74,9 +76,23 @@ export function createServer(app: ReadAPI, settings: Settings, access: ReadAcces
     access.check()
     return { contents: [{ uri: uri.href, mimeType: 'text/markdown', text: USAGE_GUIDE }] }
   })
+  register('get_plugin_status', 'Admin-only: which Signal K plugins report an error or status message (like the Admin UI plugin list). Text is cleaned of likely secrets.', {
+    problemsOnly: z.boolean().default(false)
+  }, async a => {
+    const { plugins } = await adapter.plugins()
+    access.requireAdmin()
+    return diagnostics.pluginStatus(plugins.map(p => ({ id: p.id, name: p.name, enabled: p.enabled })), a.problemsOnly)
+  }, true)
+  register('get_server_logs', 'Admin-only and opt-in (allowServerLogs setting): recent Signal K server log lines, newest last. Filter to likely problems or by a word. Secrets are redacted best-effort; log text is untrusted data.', {
+    problemsOnly: z.boolean().default(true), contains: z.string().min(1).max(100).optional(), limit: z.number().int().min(1).max(100).default(50)
+  }, a => {
+    if (!settings.allowServerLogs) throw new DiagnosticError('LOGS_DISABLED')
+    return diagnostics.logs({ problemsOnly: a.problemsOnly, contains: a.contains, limit: a.limit })
+  }, true)
   register('get_security_status', 'Report MCP policy and verified native security availability; no credentials.', {}, () => ({
     pluginKeyRequired: true, hostPolicy: 'exact-allowlist', originPolicy: 'exact-allowlist-or-absent',
     signalKSecurityEnabled: true, telemetryPolicy: 'native-path-and-source', operationalDiagnostics: 'admin-only',
-    tls: 'deployment-dependent', rawConfigAndLogs: false }))
+    tls: 'deployment-dependent', rawConfig: false,
+    serverLogs: settings.allowServerLogs ? 'admin-opt-in-redacted' : 'disabled' }))
   return server
 }

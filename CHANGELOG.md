@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add `get_plugin_status` (admin): which plugins report an error or status message, joined with the plugin inventory, with secrets cleaned from the text.
+- Add `get_server_logs` (admin, opt-in via the new `allowServerLogs` setting, default off): recent Signal K server log lines from the in-memory buffer. Lines are filtered to likely problems or by a word, and passwords, tokens, keys, JWTs, URL credentials, private keys and the plugin's own MCP key are redacted before output. Searches run on redacted text.
+- `get_security_status` now reports `serverLogs` (`disabled` or `admin-opt-in-redacted`) instead of `rawConfigAndLogs`.
+- The usage guide and server instructions explain how to troubleshoot with plugin status and logs.
+
 ## 1.1.0
 
 **Upgrade note:** installs that saved their own path prefixes must add `notifications` for `list_alarms` and the alarm part of `get_vessel_overview`. Existing admin-token clients keep working unchanged.

@@ -2,7 +2,7 @@
 
 ## Finding
 
-Signal K Server exposes recent server output through its admin WebSocket connection. This was verified in the source of **2.31.0 and 2.35.1** on 2026-10-26. On 2026-10-28, the development-only probe also verified admin log access on the operator's live 2.31.0 server and rejected an invalid token. It printed/saved no raw log contents. A separate check independently confirmed a valid non-admin token and verified that its log subscription was rejected. See [LIVE-ACCEPTANCE.md](LIVE-ACCEPTANCE.md). The MCP plugin does not expose logs; `get_recent_errors` remains unregistered.
+Signal K Server exposes recent server output through its admin WebSocket connection. This was verified in the source of **2.31.0 and 2.35.1** on 2026-10-26. On 2026-10-28, the development-only probe also verified admin log access on the operator's live 2.31.0 server and rejected an invalid token. It printed/saved no raw log contents. A separate check independently confirmed a valid non-admin token and verified that its log subscription was rejected. See [LIVE-ACCEPTANCE.md](LIVE-ACCEPTANCE.md). From version 1.2, the plugin exposes this buffer through the admin-only, opt-in `get_server_logs` tool; see [the MCP log tool](#the-mcp-log-tool-since-12).
 
 An authenticated client connects to `wss://<server>/signalk/v1/stream?subscribe=none` and sends:
 
@@ -40,7 +40,19 @@ The probe validates TLS normally, sends the token only in the Authorization head
 
 The probe is development-only and is not included in the installed plugin tarball. Local WebSocket fixtures test success, denial, timeout, configuration checks, redirect refusal and the absence of log text in results. They do not replace live server verification. To verify negative authorization, run separately with an operator-provided non-admin credential; never disable server security for this test.
 
-## Implications for a future MCP log tool
+## The MCP log tool (since 1.2)
+
+`get_server_logs` reads `app.logging.getLog()` in-process. It does not open a WebSocket subscription. The decisions below were made against the concerns in the next section:
+
+- **Opt-in and admin-only:** the `allowServerLogs` setting defaults to off, and only native Signal K admins can call the tool, even when it is on.
+- **Projected, not raw:** whole chunks are redacted before splitting and filtering. Lines are capped at 500 characters and the result at about 20,000 characters. Binary chunks are skipped.
+- **Shape-checked:** `logging.getLog` must be a data property returning an array of `{ ts: string, row, isError?: boolean }` with at most 1,000 entries. Accessor properties are never invoked. Anything else returns `UNSUPPORTED`.
+- **Untrusted text:** the result carries fixed notes saying that the text is third-party output and that redaction is best-effort. The usage guide tells assistants not to follow instructions in it.
+- **Tests:** synthetic secret-bearing records (URL credentials, Bearer/JWT, JSON keys, query tokens, PEM, long hex, the MCP key) must never appear in tool output.
+
+`get_plugin_status` reads `getProviderStatus()` plugin rows (also internal) with the same text cleaning. It doesn't need the log setting, because plugin status messages are the short texts already shown in the Admin UI plugin list.
+
+## Original assessment before the log tool
 
 `app.logging.getLog()` is an internal method returning the buffer. The plugin host copies the app's enumerable properties into the plugin facade in both inspected versions, making access feasible, but it is not part of the stable `ServerAPI` contract. A future adapter needs runtime shape checks, explicit opt-in, output limits and its own unsupported result.
 

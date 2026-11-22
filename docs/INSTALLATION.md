@@ -76,9 +76,12 @@ Example options, with a generic local host:
   "allowedHosts": ["localhost:3000"],
   "allowedOrigins": [],
   "pathPrefixes": ["navigation", "environment", "electrical", "propulsion", "tanks", "notifications"],
-  "staleAfterSeconds": 300
+  "staleAfterSeconds": 300,
+  "allowServerLogs": false
 }
 ```
+
+`allowServerLogs` (default `false`) lets admin tokens read redacted server log lines through `get_server_logs`; see [server log access](SERVER-LOGS.md#the-mcp-log-tool-since-12). Leave it off unless you want the assistant to look in the log.
 
 Use your deployment's incoming Host header, including its port, in `allowedHosts`. Enter a host and port, without a URL scheme or path. For a native MCP client that sends no Origin, leave `allowedOrigins` as an empty list: remove blank rows rather than saving an empty-string entry. A nonempty list must contain valid, exact origin URLs. Present Origin headers must match `allowedOrigins` exactly; an empty list permits clients that omit Origin and rejects requests that carry one. Cross-origin CORS support is not provided. A reverse proxy must preserve an allowed Host; forwarded host headers do not determine trust.
 

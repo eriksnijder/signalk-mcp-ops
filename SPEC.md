@@ -27,11 +27,12 @@ Fourteen tools are registered and returned by `tools/list`, plus one static reso
 | `list_connections` | none | isolated 2.31 internal adapter | Implemented; connections with id, enabled, type only |
 | `get_connection` | `id` | planned projected provider config | Planned/reserved; not registered |
 | `get_connection_status` | `id` | isolated 2.31 getProviderStatus adapter | Implemented; safe status projection or unknown; NOT_FOUND for absent connection |
-| `get_plugin_status` | `id` | planned versioned status adapter | Planned/reserved; not registered |
+| `get_plugin_status` | `problemsOnly=false` | FeatureInfo plus `getProviderStatus` plugin rows (internal, shape-checked) | Implemented; admin-only; cleaned/capped status text |
+| `get_server_logs` | `problemsOnly=true`, optional `contains` (1-100), `limit=50` (<=100) | internal `app.logging.getLog()` buffer (shape-checked) | Implemented; admin-only and operator opt-in (`allowServerLogs`); redacted |
 | `get_plugin_config` | `id` | planned per-plugin allowlisted projection | Planned/reserved; not registered |
-| `get_recent_errors` | none | planned bounded, sanitized log adapter | Planned/reserved; not registered; no log subscription |
+| `get_recent_errors` | none | superseded by `get_server_logs` | Not registered |
 
-Internal provider reads are restricted to the isolated 2.31 adapter and runtime shape detection. No filesystem, logs or full configuration are exposed. Further adapters require representative fixtures and secret-leak tests. An unsupported feature is not reported as an empty inventory or healthy state.
+Internal provider reads are restricted to the isolated 2.31 adapter and runtime shape detection. No filesystem or full configuration is exposed; the in-memory server log is exposed only through `get_server_logs` as described below. Further adapters require representative fixtures and secret-leak tests. An unsupported feature is not reported as an empty inventory or healthy state.
 
 ## Response contract
 
@@ -41,7 +42,7 @@ Successful results use `{ "ok": true, "data": ... }`; failures use `{ "ok": fals
 
 The MCP route requires an explicit native Signal K bearer token and the additional MCP key. Authenticated readonly/readwrite/admin identities may use telemetry under the intersection of configured prefixes and exact native self-context path/source read permission. Native admins do not bypass these ACLs. `list_connections`, `get_connection_status` and `list_plugins` additionally require admin role; non-admin `get_server_info` omits internal-adapter detail and diagnosis omits provider context. All nine tools remain discoverable with explicit admin-only descriptions.
 
-Additional codes: `ADMIN_REQUIRED`, `PATH_UNAVAILABLE`, `BEARER_TOKEN_REQUIRED`, `INVALID_TOKEN`, `PERMISSION_DENIED`, `SIGNALK_SECURITY_UNAVAILABLE` and `PLUGIN_DISABLED`. Transport authentication errors use 401/403/503; tool failures keep the response envelope. Missing/dummy security and unavailable permission-aware routing fail closed. Only the Authorization header is used for native authentication, never cookies, query tokens or an inherited HTTP principal. See [complete permission behavior](docs/READ-ONLY-USERS.md).
+Additional codes: `ADMIN_REQUIRED`, `PATH_UNAVAILABLE`, `BEARER_TOKEN_REQUIRED`, `INVALID_TOKEN`, `PERMISSION_DENIED`, `SIGNALK_SECURITY_UNAVAILABLE`, `PLUGIN_DISABLED` and `LOGS_DISABLED`. Transport authentication errors use 401/403/503; tool failures keep the response envelope. Missing/dummy security and unavailable permission-aware routing fail closed. Only the Authorization header is used for native authentication, never cookies, query tokens or an inherited HTTP principal. See [complete permission behavior](docs/READ-ONLY-USERS.md).
 
 `list_paths` paginates only native-authorized selected-source leaves. `inspect_path_sources` requires an authorized selected value and filters each alternate source ID. Missing/unknown source provenance is readable only when Signal K confirms no ACLs and grants the read. With ACLs, absent and denied readings both return `PATH_UNAVAILABLE` and diagnosis reports `unavailable` without values, sources or provider context. With no ACLs, absent paths retain `NOT_FOUND` / `missing`. The native ACL rule order remains authoritative.
 
@@ -73,7 +74,13 @@ Admin diagnoses of authorized paths include providerContext with availability, p
 
 Signal K may parse JSON before the plugin. Its own parser/proxy must therefore enforce an ingress body limit; the plugin additionally rejects oversized pre-parsed objects but cannot undo memory already allocated by the host.
 
-Server log access has been source-verified separately on 2.31.0 and 2.35.1; see [SERVER-LOGS.md](docs/SERVER-LOGS.md). There is no MCP log tool in this candidate.
+## Server diagnostics contract
+
+`get_plugin_status` (admin) joins the bounded plugin inventory with `getProviderStatus()` rows of `statusType: 'plugin'`, plus 2.31 fallback rows without `statusType` only for known plugin ids. Connection (`provider`) rows are excluded and keep the stricter withholding policy above. Each plugin reports `state` (`error`, `ok` = a normal status was reported, or `no_status`), `message`, `since`, `previousError` and `previousErrorAt`. Text is cleaned by the redaction rules below and capped at 300 characters. Unexpected shapes return `UNSUPPORTED`.
+
+`get_server_logs` (admin) returns `LOGS_DISABLED` unless the operator sets `allowServerLogs: true` (default false). It snapshots the host buffer without mutating it, skips non-string chunks, redacts each whole chunk, then splits it into lines. Filtering (`problemsOnly`: stderr or a problem keyword/errno code; `contains`: case-insensitive) runs on redacted text, so a search cannot confirm a hidden secret. It returns the newest matching lines in chronological order, up to `limit`, 500 characters per line and about 20,000 characters of text, with `matched`, `scannedLines`, `skippedBinaryChunks`, `olderMatchesOmitted` and fixed notes. The buffer holds 100 write chunks, is lost on restart and uses local `MMM DD HH:mm:ss` timestamps.
+
+Redaction (best effort, `src/redact.ts`): ANSI/control characters; PEM private keys; `Bearer`/`Basic`/`Digest`/`JWT` credentials; JWTs; URL user-info; values of sensitive keys (password, secret, token, api key, authorization, credential, private key, session, cookie, signature) in `key=value`, `key: value`, JSON and query strings; hex runs of 32+ characters; mixed-case base64-like runs of 40+ characters; and the plugin's own MCP key. Log text may still contain positions, host names or paths and is labelled untrusted. Source evidence for both internals: [SERVER-LOGS.md](docs/SERVER-LOGS.md).
 
 ## Acceptance and exclusions
 
